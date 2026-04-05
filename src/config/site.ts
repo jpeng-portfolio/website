@@ -14,6 +14,6 @@ export const siteConfig = {
   ],
   socialLinks: {
     linkedin: "https://www.linkedin.com/in/jason-paquette-2a865b181/",
-    gitlab: "https://gitlab.com/fintechmetrix",
+    gitlab: "https://gitlab.com/jpaquette2323",
   },
 } as const;

@@ -15,7 +15,7 @@ export const projectsData: ProjectItem[] = [
     period: "2025",
     liveUrl: "https://jpcloudengineering.com",
     repositoryLabel: "Open Repository",
-    repositoryUrl: "https://gitlab.com/fintechmetrix",
+    repositoryUrl: "https://gitlab.com/jpeng-portfolio",
     summary:
       "A statically exported Next.js portfolio deployed on AWS with fully automated Terraform infrastructure, serverless contact form, and daily cost monitoring.",
     tech: [
