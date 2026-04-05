@@ -4,19 +4,23 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { siteConfig } from "@/config/site";
 
-export function Navbar() {
+type NavbarProps = {
+  domain: string;
+  navItems: { label: string; href: string }[];
+};
+
+export function Navbar({ domain, navItems }: NavbarProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#1e293b] bg-[#0F172A]/95 backdrop-blur">
       <div className="container-shell flex h-16 items-center justify-between">
         <a href="#" className="technical-text text-sm font-semibold text-[#F5F0E8]">
-          {siteConfig.domain}
+          {domain}
         </a>
         <nav className="hidden items-center gap-6 md:flex">
-          {siteConfig.navItems.map((item) => (
+          {navItems.map((item) => (
             <a
               key={item.href}
               href={item.href}
@@ -47,7 +51,7 @@ export function Navbar() {
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
             <nav className="container-shell flex flex-col py-4">
-              {siteConfig.navItems.map((item) => (
+              {navItems.map((item) => (
                 <a
                   key={item.href}
                   href={item.href}

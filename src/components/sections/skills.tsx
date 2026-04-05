@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { SkillCategory } from "@/components/skills/skill-category";
 import { SkillLegend } from "@/components/skills/skill-legend";
 import { SectionHeading } from "@/components/shared/section-heading";
-import { skillCategories } from "@/lib/skills-data";
+import { type SkillCategory as SkillCategoryType } from "@/lib/skills-data";
 
 const slideFromLeft = {
   hidden: { opacity: 0, x: -30 },
@@ -16,7 +16,11 @@ const slideFromRight = {
   visible: { opacity: 1, x: 0 },
 };
 
-export function SkillsSection() {
+type SkillsSectionProps = {
+  categories: SkillCategoryType[];
+};
+
+export function SkillsSection({ categories }: SkillsSectionProps) {
   return (
     <section id="skills" className="section-padding border-b border-border/60">
       <div className="container-shell">
@@ -33,7 +37,7 @@ export function SkillsSection() {
           viewport={{ once: true, margin: "-80px" }}
           transition={{ staggerChildren: 0.12 }}
         >
-          {skillCategories.map((category, index) => (
+          {categories.map((category, index) => (
             <motion.div
               key={category.id}
               variants={index % 2 === 0 ? slideFromLeft : slideFromRight}

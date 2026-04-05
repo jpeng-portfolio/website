@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Toaster } from "sonner";
+import { fetchSiteConfig } from "@/sanity/lib/fetch";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -21,11 +22,12 @@ export const metadata: Metadata = {
     "Cloud and Infrastructure Engineering portfolio built with Next.js, shadcn, and AWS-focused projects.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const siteConfig = await fetchSiteConfig();
   return (
     <html
       lang="en"
@@ -33,9 +35,9 @@ export default function RootLayout({
       style={{ scrollBehavior: "smooth" }}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <Navbar />
+        <Navbar domain={siteConfig.domain} navItems={siteConfig.navItems} />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <Footer title={siteConfig.title} socialLinks={siteConfig.socialLinks} />
         <Toaster richColors position="top-right" />
       </body>
     </html>

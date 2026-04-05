@@ -17,7 +17,11 @@ const fadeInUp = {
 
 const CONTACT_API_URL = process.env.NEXT_PUBLIC_CONTACT_API_URL;
 
-export function ContactSection() {
+type ContactSectionProps = {
+  socialLinks: { linkedin: string; gitlab: string };
+};
+
+export function ContactSection({ socialLinks }: ContactSectionProps) {
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -130,7 +134,7 @@ export function ContactSection() {
               <li>• VPNs & Networking.</li>
               <li>• Email & Identity Solutions.</li>
             </ul>
-            <SocialLinks className="mt-5 flex gap-2" />
+            <SocialLinks className="mt-5 flex gap-2" links={socialLinks} />
           </motion.aside>
         </motion.div>
       </div>

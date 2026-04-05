@@ -5,17 +5,36 @@ import { ExperienceSection } from "@/components/sections/experience";
 import { HeroSection } from "@/components/sections/hero";
 import { ProjectsSection } from "@/components/sections/projects";
 import { SkillsSection } from "@/components/sections/skills";
+import {
+  fetchAboutSection,
+  fetchCertifications,
+  fetchExperience,
+  fetchHeroSection,
+  fetchProjects,
+  fetchSiteConfig,
+  fetchSkillCategories,
+} from "@/sanity/lib/fetch";
 
-export default function Home() {
+export default async function Home() {
+  const [siteConfig, hero, about, skills, experience, projects, certifications] =
+    await Promise.all([
+      fetchSiteConfig(),
+      fetchHeroSection(),
+      fetchAboutSection(),
+      fetchSkillCategories(),
+      fetchExperience(),
+      fetchProjects(),
+      fetchCertifications(),
+    ]);
   return (
     <>
-      <HeroSection />
-      <AboutSection />
-      <SkillsSection />
-      <ExperienceSection />
-      <ProjectsSection />
-      <CertificationsSection />
-      <ContactSection />
+      <HeroSection data={hero} domain={siteConfig.domain} />
+      <AboutSection data={about} socialLinks={siteConfig.socialLinks} />
+      <SkillsSection categories={skills} />
+      <ExperienceSection data={experience} />
+      <ProjectsSection projects={projects} />
+      <CertificationsSection certifications={certifications} />
+      <ContactSection socialLinks={siteConfig.socialLinks} />
     </>
   );
 }

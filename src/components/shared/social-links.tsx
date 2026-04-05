@@ -1,15 +1,15 @@
-import { siteConfig } from "@/config/site";
 import { FaGitlab, FaLinkedinIn } from "react-icons/fa";
 
 type SocialLinksProps = {
+  links: { linkedin: string; gitlab: string };
   className?: string;
 };
 
-export function SocialLinks({ className }: SocialLinksProps) {
+export function SocialLinks({ links, className }: SocialLinksProps) {
   return (
     <div className={className}>
       <a
-        href={siteConfig.socialLinks.linkedin}
+        href={links.linkedin}
         target="_blank"
         rel="noreferrer"
         aria-label="LinkedIn"
@@ -18,7 +18,7 @@ export function SocialLinks({ className }: SocialLinksProps) {
         <FaLinkedinIn className="h-4 w-4 transition-colors group-hover:text-[#60a5fa]" />
       </a>
       <a
-        href={siteConfig.socialLinks.gitlab}
+        href={links.gitlab}
         target="_blank"
         rel="noreferrer"
         aria-label="GitLab"

@@ -3,9 +3,13 @@
 import { motion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeading } from "@/components/shared/section-heading";
-import { projectsData } from "@/lib/projects-data";
+import { type ProjectItem } from "@/lib/projects-data";
 
-export function ProjectsSection() {
+type ProjectsSectionProps = {
+  projects: ProjectItem[];
+};
+
+export function ProjectsSection({ projects }: ProjectsSectionProps) {
   return (
     <section id="projects" className="section-padding border-b border-border/60">
       <div className="container-shell">
@@ -15,7 +19,7 @@ export function ProjectsSection() {
           description="Representative work focused on cost, reliability, deployment automation, and production observability."
         />
         <div className="space-y-6">
-          {projectsData.map((project) => (
+          {projects.map((project) => (
             <motion.div
               key={project.title}
               className="relative overflow-hidden rounded-lg border border-border bg-background"
