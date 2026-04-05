@@ -30,6 +30,7 @@ export const skillCategories: SkillCategory[] = [
     skills: [
       { name: "Java", level: 100 },
       { name: "C++", level: 100 },
+      { name: "Rust", level: 38 },
       { name: "JavaScript / TypeScript", level: 90 },
       { name: "Python", level: 75 },
       { name: "Bash Scripting", level: 80 },
