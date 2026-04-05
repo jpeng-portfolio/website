@@ -1,3 +1,7 @@
+"use client";
+
+import { motion } from "motion/react";
+
 type SectionHeadingProps = {
   eyebrow?: string;
   title: string;
@@ -10,7 +14,13 @@ export function SectionHeading({
   description,
 }: SectionHeadingProps) {
   return (
-    <header className="mb-8 space-y-3">
+    <motion.header
+      className="mb-8 space-y-3"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
       {eyebrow ? (
         <p className="technical-text text-xs font-semibold uppercase tracking-[0.2em] text-[#475569]">
           {eyebrow}
@@ -24,6 +34,6 @@ export function SectionHeading({
           {description}
         </p>
       ) : null}
-    </header>
+    </motion.header>
   );
 }

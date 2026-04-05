@@ -29,7 +29,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} h-full scroll-smooth antialiased`}
+      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      style={{ scrollBehavior: "smooth" }}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Navbar />

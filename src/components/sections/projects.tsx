@@ -1,7 +1,9 @@
+"use client";
+
+import { motion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { projectsData } from "@/lib/projects-data";
-import { TiltCard } from "@/components/unlumen-ui/tilt-card";
 
 export function ProjectsSection() {
   return (
@@ -14,16 +16,29 @@ export function ProjectsSection() {
         />
         <div className="space-y-6">
           {projectsData.map((project) => (
-            <TiltCard
+            <motion.div
               key={project.title}
-              title={project.title}
-              description={project.summary}
-              price={project.period}
-              badgeLabel="Featured"
-              badgeVariant="success"
-              className="!h-auto !gap-0"
+              className="relative overflow-hidden rounded-lg border border-border bg-background"
+              whileHover={{ y: -6, boxShadow: "0 12px 24px rgba(0,0,0,0.12)" }}
+              transition={{ type: "spring", stiffness: 300, damping: 24 }}
             >
-              <div className="space-y-4 pb-4">
+              <div className="flex flex-row justify-between px-4 sm:px-6 py-4 sm:py-5">
+                <div className="flex flex-col gap-1 flex-1 mr-2">
+                  <h2 className="text-lg tracking-tight leading-tight font-medium">
+                    {project.title}
+                  </h2>
+                  <p className="text-foreground/50 text-sm">{project.summary}</p>
+                </div>
+                <div className="inline-flex h-fit items-center text-sm whitespace-nowrap shrink-0">
+                  <span className="rounded-l-full bg-secondary h-fit py-1 px-2 font-medium">
+                    {project.period}
+                  </span>
+                  <span className="rounded-r-full text-sm h-fit py-1 px-2 font-medium bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+                    Featured
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-4 px-4 sm:px-6 pb-4 sm:pb-5">
                 <ul className="space-y-2 text-sm text-[#334155]">
                   {project.bullets.map((bullet) => (
                     <li key={bullet} className="flex gap-2">
@@ -60,7 +75,7 @@ export function ProjectsSection() {
                   ) : null}
                 </div>
               </div>
-            </TiltCard>
+            </motion.div>
           ))}
         </div>
       </div>

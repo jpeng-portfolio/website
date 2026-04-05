@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
@@ -35,22 +36,31 @@ export function Navbar() {
           {open ? <X /> : <Menu />}
         </Button>
       </div>
-      {open ? (
-        <div className="border-t border-[#1e293b] bg-[#0F172A] md:hidden">
-          <nav className="container-shell flex flex-col py-4">
-            {siteConfig.navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="py-2 text-sm text-[#F5F0E8] transition hover:text-[#60a5fa]"
-                onClick={() => setOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
-          </nav>
-        </div>
-      ) : null}
+      <AnimatePresence>
+        {open ? (
+          <motion.div
+            key="mobile-menu"
+            className="border-t border-[#1e293b] bg-[#0F172A] md:hidden overflow-hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+          >
+            <nav className="container-shell flex flex-col py-4">
+              {siteConfig.navItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="py-2 text-sm text-[#F5F0E8] transition hover:text-[#60a5fa]"
+                  onClick={() => setOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </header>
   );
 }

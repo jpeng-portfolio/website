@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { SocialLinks } from "@/components/shared/social-links";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
 
 const CONTACT_API_URL = process.env.NEXT_PUBLIC_CONTACT_API_URL;
 
@@ -65,10 +71,21 @@ export function ContactSection() {
         <SectionHeading
           eyebrow="Contact"
           title="Let's build something reliable"
-          description="This form is ready to connect to an Amazon SES-backed endpoint (API Gateway + Lambda + SES)."
+          description="Send me a message — powered by API Gateway, Lambda, and Amazon SES."
         />
-        <div className="grid gap-8 rounded-2xl border border-border bg-card p-6 shadow-sm lg:grid-cols-[1.2fr_0.8fr]">
-          <form className="space-y-4" onSubmit={handleSubmit}>
+        <motion.div
+          className="grid gap-8 rounded-2xl border border-border bg-card p-6 shadow-sm lg:grid-cols-[1.2fr_0.8fr]"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ staggerChildren: 0.15 }}
+        >
+          <motion.form
+            className="space-y-4"
+            onSubmit={handleSubmit}
+            variants={fadeInUp}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
               <Input id="name" name="name" placeholder="Your name" />
@@ -97,8 +114,12 @@ export function ContactSection() {
             >
               {loading ? "Sending..." : "Send Message"}
             </Button>
-          </form>
-          <aside className="rounded-xl border border-border bg-[#f8f4ed] p-5">
+          </motion.form>
+          <motion.aside
+            className="rounded-xl border border-border bg-[#f8f4ed] p-5"
+            variants={fadeInUp}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
             <p className="technical-text text-xs font-semibold uppercase tracking-[0.18em] text-[#475569]">
               What I Can Help With
             </p>
@@ -110,8 +131,8 @@ export function ContactSection() {
               <li>• Email & Identity Solutions.</li>
             </ul>
             <SocialLinks className="mt-5 flex gap-2" />
-          </aside>
-        </div>
+          </motion.aside>
+        </motion.div>
       </div>
     </section>
   );
