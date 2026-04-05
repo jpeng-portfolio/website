@@ -24,7 +24,9 @@ workflow:
     - export NEXT_PUBLIC_CONTACT_API_URL="${NEXT_PUBLIC_CONTACT_API_URL:-$CONTACT_API_URL}"
 
 .aws_oidc_base:
-  image: amazon/aws-cli:latest
+  image:
+    name: amazon/aws-cli:latest
+    entrypoint: [""]
   id_tokens:
     GITLAB_OIDC_TOKEN:
       aud: https://gitlab.com
