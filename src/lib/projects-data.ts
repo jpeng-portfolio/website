@@ -1,8 +1,21 @@
-export const projectsData = [
+export type ProjectItem = {
+  title: string;
+  period: string;
+  liveUrl: string;
+  repositoryUrl?: string;
+  repositoryLabel?: string;
+  summary: string;
+  tech: string[];
+  bullets: string[];
+};
+
+export const projectsData: ProjectItem[] = [
   {
     title: "Scale-to-Zero Web Application Platform",
     period: "Personal Project",
     liveUrl: "https://app.fintech-metrix.dev",
+    repositoryLabel: "Open Repository",
+    repositoryUrl: "https://gitlab.com/fintechmetrix",
     summary:
       "Cost-optimized AWS infrastructure that provisions services on-demand to reduce idle spend while preserving production-grade reliability.",
     tech: [

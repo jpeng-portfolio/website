@@ -65,6 +65,37 @@ Payload shape:
 
 ## Environment variables
 - `NEXT_PUBLIC_CONTACT_API_URL` — public API endpoint for contact form submission.
+- `CONTACT_API_URL` — optional CI convenience variable that can be mapped to `NEXT_PUBLIC_CONTACT_API_URL` during pipeline builds.
+
+## GitLab CI/CD (tag-based release)
+This repository deploys on semver tags in the format `vX.X.X` (for example: `v1.0.0`).
+
+Pipeline stages:
+1. **build** — installs dependencies and runs `npm run build` to produce `out/`.
+2. **test** — runs `npm run lint`.
+3. **deploy** — uses GitLab OIDC to assume an AWS role, syncs `out/` to S3, and invalidates CloudFront.
+
+Required GitLab CI/CD variables:
+- `ROLE_ARN` — IAM role ARN created by infrastructure bootstrap (`gitlab_deploy_role_arn` output).
+- `AWS_DEFAULT_REGION` — AWS region (typically `us-east-1`).
+- `BUCKET_NAME` — Terraform output `bucket_name` from `../infrastructure/environments/prod`.
+- `DISTRIBUTION_ID` — Terraform output `distribution_id` from `../infrastructure/environments/prod`.
+- `NEXT_PUBLIC_CONTACT_API_URL` — Terraform output `contact_api_url` (full URL ending with `/contact`).
+- Optional alias: `CONTACT_API_URL` (only needed if you intentionally want to use the CI fallback alias behavior).
+
+Variable helper script:
+```powershell
+.\scripts\set-gitlab-vars.ps1 -GitLabToken "<gitlab_pat_with_api_scope>" -ProjectId "<numeric_project_id>"
+```
+Optional flags:
+- `-Protected $false` to create non-protected variables.
+- `-IncludeContactAlias` to also set `CONTACT_API_URL`.
+
+Release command example:
+```bash
+git tag v1.0.0
+git push --tags
+```
 
 ## Customization checklist
 - Update social links in `src/config/site.ts`

@@ -13,7 +13,7 @@ export const siteConfig = {
     { label: "Contact", href: "#contact" },
   ],
   socialLinks: {
-    linkedin: "#",
-    gitlab: "#",
+    linkedin: "https://www.linkedin.com/in/jason-paquette-2a865b181/",
+    gitlab: "https://gitlab.com/fintechmetrix",
   },
 } as const;

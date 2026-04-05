@@ -9,7 +9,7 @@ export function ProjectsSection() {
       <div className="container-shell">
         <SectionHeading
           eyebrow="Projects"
-          title="Selected Cloud Engineering Work"
+          title="Web Applications and Cloud Engineering Work"
           description="Representative work focused on cost, reliability, deployment automation, and production observability."
         />
         <div className="space-y-6">
@@ -39,14 +39,26 @@ export function ProjectsSection() {
                     </Badge>
                   ))}
                 </div>
-                <a
-                  href={project.liveUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-8 items-center rounded-lg bg-[#0F172A] px-3 text-sm font-medium text-[#F5F0E8] transition hover:bg-[#1e293b]"
-                >
-                  Open Live Demo
-                </a>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={project.liveUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-8 items-center rounded-lg bg-[#0F172A] px-3 text-sm font-medium text-[#F5F0E8] transition hover:bg-[#1e293b]"
+                  >
+                    Open Live Demo
+                  </a>
+                  {project.repositoryUrl ? (
+                    <a
+                      href={project.repositoryUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex h-8 items-center rounded-lg border border-[#0F172A] bg-transparent px-3 text-sm font-medium text-[#0F172A] transition hover:bg-[#e8e1d6]"
+                    >
+                      {project.repositoryLabel ?? "Open Repository"}
+                    </a>
+                  ) : null}
+                </div>
               </div>
             </TiltCard>
           ))}

@@ -22,3 +22,4 @@
 - Keep code clean and composable.
 - Prefer small, reusable components over deeply nested JSX blocks.
 - Validate changes with lint + build before handing off.
+- GitLab releases are tag-driven (`vX.X.X`) and should pass build, lint test, and S3/CloudFront deploy stages.

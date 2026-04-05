@@ -19,7 +19,7 @@ export function AboutSection() {
               escalation support.
             </p>
             <p>
-              Recent focus areas include Terraform module design, CI/CD
+              Recent focus areas include website development, Terraform module design, CI/CD
               pipelines, hybrid cloud migrations, and cost-optimized AWS
               environments designed for high reliability under real production
               constraints.
@@ -30,7 +30,7 @@ export function AboutSection() {
               Profile Links
             </p>
             <p className="mt-2 text-sm text-[#475569]">
-              Add your LinkedIn and GitLab URLs in <code>src/config/site.ts</code>.
+              Check out my LinkedIn profile and GitLab.
             </p>
             <SocialLinks className="mt-4 flex items-center gap-2" />
           </div>

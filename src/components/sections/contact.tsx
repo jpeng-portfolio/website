@@ -100,13 +100,14 @@ export function ContactSection() {
           </form>
           <aside className="rounded-xl border border-border bg-[#f8f4ed] p-5">
             <p className="technical-text text-xs font-semibold uppercase tracking-[0.18em] text-[#475569]">
-              SES wiring notes
+              What I Can Help With
             </p>
             <ul className="mt-3 space-y-2 text-sm text-[#334155]">
-              <li>• Create an API Gateway POST endpoint.</li>
-              <li>• Trigger Lambda to call SES SendEmail.</li>
-              <li>• Set CORS and allowed origins.</li>
-              <li>• Store endpoint in NEXT_PUBLIC_CONTACT_API_URL.</li>
+              <li>• Website Design & Hosting.</li>
+              <li>• AWS architecture & Cost Optimization.</li>
+              <li>• Infrastructure Design & Troubleshooting.</li>
+              <li>• VPNs & Networking.</li>
+              <li>• Email & Identity Solutions.</li>
             </ul>
             <SocialLinks className="mt-5 flex gap-2" />
           </aside>
