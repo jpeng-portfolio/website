@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/jasonp/OneDrive - Beginner IT Guides/Documents/Career/Portfolio/Resumes/**)",
+      "Bash(powershell -Command ' *)"
+    ]
+  }
+}

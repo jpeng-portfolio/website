@@ -11,6 +11,54 @@ export type ProjectItem = {
 
 export const projectsData: ProjectItem[] = [
   {
+    title: "Dorval Construction",
+    period: "2025",
+    liveUrl: "https://dorvalconstruction.com",
+    summary:
+      "Marketing site for a custom home remodeling contractor — multi-page Next.js build with image gallery, services pages, and a serverless contact form deployed on AWS.",
+    tech: [
+      "Next.js 15",
+      "TypeScript",
+      "Tailwind CSS",
+      "shadcn/ui",
+      "AWS S3",
+      "CloudFront",
+      "Lambda",
+      "API Gateway",
+      "SES",
+      "Cloudflare DNS",
+    ],
+    bullets: [
+      "Multi-page Next.js 15 site with image gallery and services pages for a home remodeling contractor.",
+      "Serverless contact form using API Gateway HTTP API, Lambda, and SES with full domain verification.",
+      "Static site hosted on a private S3 bucket behind CloudFront with Origin Access Control and HTTPS-only enforcement.",
+      "Deployed via GitLab CI/CD with DNS managed through Cloudflare.",
+    ],
+  },
+  {
+    title: "Saudade Café",
+    period: "2025",
+    liveUrl: "https://saudadecafe.cafe",
+    summary:
+      "Bilingual (Portuguese/English) café site with Sanity headless CMS for menu management and a coworking booking subdomain with multi-step calendar and payment flow.",
+    tech: [
+      "Next.js 15",
+      "TypeScript",
+      "Tailwind CSS",
+      "Sanity CMS",
+      "AWS S3",
+      "CloudFront",
+      "Lambda",
+      "API Gateway",
+      "Cloudflare DNS",
+    ],
+    bullets: [
+      "Bilingual (Portuguese/English) Next.js site with Sanity headless CMS powering menu and content management.",
+      "Coworking booking subdomain with a multi-step calendar, time-slot selection, and payment flow.",
+      "Static export hosted on AWS S3 + CloudFront with DNS on Cloudflare.",
+    ],
+  },
+  {
     title: "This Website",
     period: "2025",
     liveUrl: "https://jpcloudengineering.com",

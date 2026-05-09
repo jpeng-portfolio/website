@@ -74,14 +74,21 @@ Pipeline stages:
 1. **build** — installs dependencies and runs `npm run build` to produce `out/`.
 2. **test** — runs `npm run lint`.
 3. **deploy** — uses GitLab OIDC to assume an AWS role, syncs `out/` to S3, and invalidates CloudFront.
+4. **mirror** — mirrors the GitLab repository to GitHub on push/schedule pipelines.
 
 Required GitLab CI/CD variables:
 - `ROLE_ARN` — IAM role ARN created by infrastructure bootstrap (`gitlab_deploy_role_arn` output).
 - `AWS_DEFAULT_REGION` — AWS region (typically `us-east-1`).
 - `BUCKET_NAME` — Terraform output `bucket_name` from `../infrastructure/environments/prod`.
 - `DISTRIBUTION_ID` — Terraform output `distribution_id` from `../infrastructure/environments/prod`.
-- `NEXT_PUBLIC_CONTACT_API_URL` — Terraform output `contact_api_url` (full URL ending with `/contact`).
-- Optional alias: `CONTACT_API_URL` (only needed if you intentionally want to use the CI fallback alias behavior).
+- `NEXT_PUBLIC_CONTACT_API_URL` — public contact API URL used by the frontend build.
+- `GITHUB_OWNER` — GitHub owner/org used by the mirror target URL.
+- `GITHUB_REPO` — GitHub repository name used by the mirror target URL.
+- `GITHUB_USERNAME` — GitHub username used for mirror authentication.
+- `GITHUB_TOKEN` — GitHub token (PAT/fine-grained token) used for mirror authentication.
+- Optional alias: `CONTACT_API_URL` (if set, the pipeline maps it to `NEXT_PUBLIC_CONTACT_API_URL` when that variable is unset).
+
+GitLab provides these required runtime variables automatically (no manual setup needed): `CI_JOB_TOKEN`, `CI_SERVER_HOST`, `CI_PROJECT_PATH`, `CI_PIPELINE_ID`, and `GITLAB_OIDC_TOKEN`.
 
 Variable helper script:
 ```powershell

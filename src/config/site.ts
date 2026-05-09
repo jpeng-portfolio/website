@@ -1,9 +1,9 @@
 export const siteConfig = {
   title: "JP Cloud Engineering",
   domain: "jpcloudengineering.com",
-  tagline: "Cloud & Infrastructure Engineer",
+  tagline: "Full-Stack Serverless Developer & Cloud Engineer",
   description:
-    "Cloud and Infrastructure engineering portfolio focused on AWS, Terraform, CI/CD, automation, and reliable production systems.",
+    "Full-stack serverless developer and cloud engineer building production Next.js applications on AWS with Terraform, SST, and serverless backends.",
   navItems: [
     { label: "About", href: "#about" },
     { label: "Skills", href: "#skills" },

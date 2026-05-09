@@ -35,6 +35,10 @@ $Variables = @(
     @("AWS_DEFAULT_REGION",          "AWS region (e.g. us-east-1)",                         $false, $Protected),
     @("BUCKET_NAME",                 "S3 bucket name for website assets",                    $false, $Protected),
     @("DISTRIBUTION_ID",             "CloudFront distribution ID",                           $false, $Protected),
+    @("GITHUB_REPO",                 "GitHub repository name (e.g. jpeng-portfolio)",        $false, $Protected),
+    @("GITHUB_OWNER",                "GitHub owner/org name",                                $false, $Protected),
+    @("GITHUB_USERNAME",             "GitHub username for authentication",                    $false, $Protected),
+    @("GITHUB_TOKEN",                "GitHub token (PAT or fine-grained token)",             $true,  $Protected),
     @("NEXT_PUBLIC_CONTACT_API_URL", "Contact API URL ending with /contact",                 $false, $Protected)
 )
 $EnteredValues = @{}
