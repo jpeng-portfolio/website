@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeading } from "@/components/shared/section-heading";
@@ -22,6 +23,22 @@ export function ProjectsSection() {
               whileHover={{ y: -6, boxShadow: "0 12px 24px rgba(0,0,0,0.12)" }}
               transition={{ type: "spring", stiffness: 300, damping: 24 }}
             >
+              {project.image ? (
+                <a
+                  href={project.liveUrl ?? project.repositoryUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group relative block h-44 w-full overflow-hidden border-b border-border bg-[#e8e1d6] sm:h-56"
+                >
+                  <Image
+                    src={project.image}
+                    alt={`${project.title} screenshot`}
+                    fill
+                    sizes="(min-width: 1024px) 768px, 100vw"
+                    className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                </a>
+              ) : null}
               <div className="flex flex-row justify-between px-4 sm:px-6 py-4 sm:py-5">
                 <div className="flex flex-col gap-1 flex-1 mr-2">
                   <h2 className="text-lg tracking-tight leading-tight font-medium">
@@ -30,11 +47,8 @@ export function ProjectsSection() {
                   <p className="text-foreground/50 text-sm">{project.summary}</p>
                 </div>
                 <div className="inline-flex h-fit items-center text-sm whitespace-nowrap shrink-0">
-                  <span className="rounded-l-full bg-secondary h-fit py-1 px-2 font-medium">
+                  <span className="rounded-full bg-secondary h-fit py-1 px-3 font-medium">
                     {project.period}
-                  </span>
-                  <span className="rounded-r-full text-sm h-fit py-1 px-2 font-medium bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-                    Featured
                   </span>
                 </div>
               </div>
@@ -55,14 +69,16 @@ export function ProjectsSection() {
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <a
-                    href={project.liveUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-8 items-center rounded-lg bg-[#0F172A] px-3 text-sm font-medium text-[#F5F0E8] transition hover:bg-[#1e293b]"
-                  >
-                    Open Live Demo
-                  </a>
+                  {project.liveUrl ? (
+                    <a
+                      href={project.liveUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex h-8 items-center rounded-lg bg-[#0F172A] px-3 text-sm font-medium text-[#F5F0E8] transition hover:bg-[#1e293b]"
+                    >
+                      Open Live Demo
+                    </a>
+                  ) : null}
                   {project.repositoryUrl ? (
                     <a
                       href={project.repositoryUrl}

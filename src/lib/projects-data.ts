@@ -1,7 +1,8 @@
 export type ProjectItem = {
   title: string;
   period: string;
-  liveUrl: string;
+  image?: string;
+  liveUrl?: string;
   repositoryUrl?: string;
   repositoryLabel?: string;
   summary: string;
@@ -11,8 +12,69 @@ export type ProjectItem = {
 
 export const projectsData: ProjectItem[] = [
   {
+    title: "TransformMyNotes",
+    period: "2026",
+    image: "/projects/transformmynotes.png",
+    liveUrl: "https://transformmynotes.com",
+    repositoryUrl: "https://github.com/jasonp2323/transformmynotes",
+    summary:
+      "Mobile-first web app that digitizes handwritten study notes with image capture, AI transcription, a Notion-style block editor, and a full-text searchable notebook.",
+    tech: [
+      "Next.js",
+      "TypeScript",
+      "SST v4",
+      "Pulumi",
+      "AWS Lambda",
+      "DynamoDB",
+      "AWS S3",
+      "Cognito",
+      "CloudFront",
+      "Amazon Bedrock",
+      "Resend",
+      "GitHub Actions",
+    ],
+    bullets: [
+      "Mobile-first web app that digitizes handwritten study notes — image capture, transcription via Amazon Bedrock (Claude vision), a Notion-style block editor, and a full-text searchable notebook.",
+      "Fully serverless AWS stack defined as code with SST v4 (deployed via Pulumi) — Next.js App Router, Lambda, S3, DynamoDB, Cognito authentication, CloudFront, and Resend.",
+      "Invite/approval-gated access with an admin panel, plus groups, shared notes, and a spaced-repetition review deck.",
+    ],
+  },
+  {
+    title: "Token Buzz",
+    period: "2026",
+    image: "/projects/token-buzz.png",
+    liveUrl: "https://tokenbuzz.app",
+    repositoryUrl: "https://github.com/Token-Buzz",
+    summary:
+      "Real-time crypto signal-intelligence platform that ingests social chatter across X, Farcaster, Telegram, and Reddit to surface trending tokens with watchlists, alerts, and LLM-summarized context.",
+    tech: [
+      "Next.js",
+      "TypeScript",
+      "SST v4",
+      "Pulumi",
+      "AWS Lambda",
+      "DynamoDB",
+      "SQS",
+      "EventBridge",
+      "CloudFront",
+      "Cloudflare",
+      "Clerk",
+      "Resend",
+      "Amazon Bedrock",
+      "Terraform",
+      "GitHub Actions",
+    ],
+    bullets: [
+      "Real-time crypto signal-intelligence platform ingesting social chatter from X, Farcaster, Telegram, and Reddit, surfacing trending tokens with watchlists, alerts, and LLM-summarized context via Amazon Bedrock.",
+      "Full serverless AWS stack defined as code with SST v4 (deployed via Pulumi) — CloudFront, Lambda, DynamoDB, SQS, EventBridge, and IAM — fronted by Cloudflare DNS/WAF with Clerk authentication and Resend email.",
+      "DynamoDB single-table data model with purpose-built GSIs and typed key-builders; per-user third-party API keys encrypted at rest using AES/KMS envelope encryption.",
+      "AWS account hardened to the CIS Foundations Benchmark v6.0 via a dedicated Terraform project (CloudTrail, IAM Access Analyzer, default-SG lockdown, scheduled Prowler evidence scans); CI/CD ships through GitHub Actions using short-lived OIDC credentials with ephemeral per-PR preview environments.",
+    ],
+  },
+  {
     title: "Dorval Construction",
-    period: "2025",
+    period: "2026",
+    image: "/projects/dorval-construction.png",
     liveUrl: "https://dorvalconstruction.com",
     summary:
       "Marketing site for a custom home remodeling contractor — multi-page Next.js build with image gallery, services pages, and a serverless contact form deployed on AWS.",
@@ -37,7 +99,8 @@ export const projectsData: ProjectItem[] = [
   },
   {
     title: "Saudade Café",
-    period: "2025",
+    period: "2026",
+    image: "/projects/saudade-cafe.png",
     liveUrl: "https://saudadecafe.cafe",
     summary:
       "Bilingual (Portuguese/English) café site with Sanity headless CMS for menu management and a coworking booking subdomain with multi-step calendar and payment flow.",
@@ -60,7 +123,8 @@ export const projectsData: ProjectItem[] = [
   },
   {
     title: "This Website",
-    period: "2025",
+    period: "2026",
+    image: "/projects/this-website.png",
     liveUrl: "https://jpcloudengineering.com",
     repositoryLabel: "Open Repository",
     repositoryUrl: "https://gitlab.com/jpeng-portfolio",
@@ -90,30 +154,31 @@ export const projectsData: ProjectItem[] = [
     ],
   },
   {
-    title: "Scale-to-Zero Web Application Platform",
-    period: "Personal Project",
-    liveUrl: "https://app.fintech-metrix.dev",
+    title: "FintechMetrix",
+    period: "2026",
     repositoryLabel: "Open Repository",
     repositoryUrl: "https://gitlab.com/fintechmetrix",
     summary:
-      "Cost-optimized AWS infrastructure that provisions services on-demand to reduce idle spend while preserving production-grade reliability.",
+      "Cost-optimized, scale-to-zero AWS platform that provisions services on demand to reduce idle spend while preserving production-grade reliability. Later rebuilt and relaunched as Token Buzz.",
     tech: [
       "AWS",
       "Terraform",
       "ECS Fargate",
       "Aurora PostgreSQL",
+      "ALB",
       "CloudFront",
       "Route 53",
       "GitLab CI/CD",
+      "Grafana",
       "Next.js",
       "TypeScript",
       "Java Spring Boot",
     ],
     bullets: [
-      "Deployed five ECS Fargate services behind ALB and CloudFront with DNS managed in Route 53.",
-      "Built a dual-mode architecture using NAT gateways for high availability and NAT instances for cost-optimized development.",
-      "Provisioned multi-cluster Aurora PostgreSQL and observability dashboards for production visibility.",
-      "Implemented environment-specific CI/CD with secure variable management and AWS Parameter Store integration.",
+      "Cost-optimized, scale-to-zero AWS platform deployed with Terraform — 5 ECS Fargate services behind ALB/CloudFront/Route 53 with Aurora PostgreSQL auto-scale-down policies.",
+      "Full GitLab CI/CD pipeline for multi-environment deployments, managing secrets via GitLab variables and AWS Parameter Store.",
+      "Dual-mode networking with NAT gateways (production HA) and NAT instances (low-cost dev), plus Grafana observability dashboards.",
+      "Full-stack build in Java Spring Boot, Next.js/TypeScript, and PostgreSQL; later rebuilt from the ground up and relaunched as Token Buzz (no longer live).",
     ],
   },
 ];

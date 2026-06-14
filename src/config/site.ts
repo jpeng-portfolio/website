@@ -1,9 +1,9 @@
 export const siteConfig = {
   title: "JP Cloud Engineering",
   domain: "jpcloudengineering.com",
-  tagline: "Full-Stack Serverless Developer & Cloud Engineer",
+  tagline: "AWS Cloud & Infrastructure Engineer",
   description:
-    "Full-stack serverless developer and cloud engineer building production Next.js applications on AWS with Terraform, SST, and serverless backends.",
+    "AWS cloud and infrastructure engineer with 5 years designing, deploying, and managing multi-account AWS and Microsoft 365 environments with Terraform, CI/CD automation, and SOC 2-compliant infrastructure.",
   navItems: [
     { label: "About", href: "#about" },
     { label: "Skills", href: "#skills" },
@@ -14,6 +14,6 @@ export const siteConfig = {
   ],
   socialLinks: {
     linkedin: "https://www.linkedin.com/in/jason-paquette-2a865b181/",
-    gitlab: "https://gitlab.com/jpaquette2323",
+    github: "https://github.com/jasonp2323",
   },
 } as const;

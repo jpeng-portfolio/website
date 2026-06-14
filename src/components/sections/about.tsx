@@ -15,35 +15,18 @@ export function AboutSection() {
       <div className="container-shell">
         <SectionHeading
           eyebrow="About"
-          title="Full-stack serverless with cloud engineering depth"
-          description="Building and shipping production Next.js applications on AWS — from React/TypeScript frontends to Lambda-backed APIs, headless CMS, and end-to-end infrastructure."
+          title="AWS cloud and infrastructure engineering, end-to-end"
+          description="Designing, deploying, and operating production cloud — multi-account AWS and Microsoft 365 environments provisioned as code with Terraform, automated with CI/CD, and hardened for SOC 2 compliance."
         />
         <motion.div
-          className="grid gap-8 rounded-2xl border border-border bg-card p-6 shadow-sm lg:grid-cols-[1.3fr_1fr]"
+          className="rounded-2xl border border-border bg-card p-6 shadow-sm after:block after:clear-both after:content-['']"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
           transition={{ staggerChildren: 0.15 }}
         >
           <motion.div
-            className="space-y-4 text-[#334155]"
-            variants={fadeInUp}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            <p>
-              I design, build, and ship full-stack web applications — Next.js
-              frontends wired to serverless backends on AWS, with Sanity headless
-              CMS, SST, and production-grade Terraform infrastructure underneath.
-            </p>
-            <p>
-              My background in cloud engineering means the frontend, serverless
-              backend, and infrastructure stay in sync end-to-end. I own the full
-              client lifecycle from discovery and scoping through deployment,
-              DNS setup, and post-launch support.
-            </p>
-          </motion.div>
-          <motion.div
-            className="rounded-xl border border-border bg-[#f8f4ed] p-5"
+            className="mb-6 rounded-xl border border-border bg-[#f8f4ed] p-5 lg:float-right lg:mb-4 lg:ml-8 lg:w-72"
             variants={fadeInUp}
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
@@ -51,9 +34,37 @@ export function AboutSection() {
               Profile Links
             </p>
             <p className="mt-2 text-sm text-[#475569]">
-              Check out my LinkedIn profile and GitLab.
+              Check out my LinkedIn profile and GitHub.
             </p>
             <SocialLinks className="mt-4 flex items-center gap-2" />
+          </motion.div>
+          <motion.div
+            className="space-y-4 text-[#334155]"
+            variants={fadeInUp}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <p>
+              I&apos;m an AWS cloud and infrastructure engineer with 5 years
+              designing, deploying, and managing production environments. I
+              provision multi-account AWS infrastructure as code with Terraform —
+              VPCs, EC2, IAM, Lambda, and security groups — and have run a SOC
+              2-compliant environment of 30+ servers on a $200K–$250K annual cloud
+              budget.
+            </p>
+            <p>
+              Day to day I build and maintain CI/CD pipelines (GitLab CI/CD and
+              GitHub Actions), architect disaster-recovery and site-to-site VPN
+              topologies, and monitor fleets with CloudWatch and DattoRMM — across
+              both AWS and Microsoft 365 / Active Directory environments. I started
+              on the frontline support desk and grew into owning cloud
+              infrastructure end-to-end.
+            </p>
+            <p>
+              I also build full-stack serverless applications on AWS — Next.js and
+              TypeScript frontends wired to Lambda-backed APIs with SST — when a
+              project calls for it, so I can take a system from infrastructure all
+              the way to a shipped product.
+            </p>
           </motion.div>
         </motion.div>
       </div>

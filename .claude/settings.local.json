@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Read(//c/Users/jasonp/OneDrive - Beginner IT Guides/Documents/Career/Portfolio/Resumes/**)",
-      "Bash(powershell -Command ' *)"
+      "Bash(powershell -Command ' *)",
+      "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless=new --disable-gpu --hide-scrollbars --window-size=1280,1100 --virtual-time-budget=30000 --run-all-compositor-stages-before-draw --screenshot=D:/Repositories/jpeng-portfolio/website/_about2.png 'http://localhost:8099/#about')",
+      "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless=new --disable-gpu --hide-scrollbars --window-size=1180,640 --virtual-time-budget=3000 --screenshot=D:/Repositories/jpeng-portfolio/website/_layouttest.png http://localhost:8099/_layouttest.html)",
+      "Bash(rm -f _about.png _about2.png _layouttest.png out/_layouttest.html)",
+      "Bash(taskkill //FI \"IMAGENAME eq python.exe\" //F)"
     ]
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,23 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { SocialLinks } from "@/components/shared/social-links";
-import { TurnstileWidget, type TurnstileHandle } from "@/components/shared/turnstile-widget";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        element: HTMLElement,
+        options: {
+          sitekey: string;
+          callback: (token: string) => void;
+          "expired-callback": () => void;
+          "error-callback": () => void;
+        }
+      ) => string;
+      reset: (widgetId?: string) => void;
+    };
+  }
+}
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -17,7 +34,7 @@ const fadeInUp = {
 };
 
 const CONTACT_API_URL = process.env.NEXT_PUBLIC_CONTACT_API_URL;
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,9 +44,8 @@ function validatePayload(payload: {
   subject: string;
   message: string;
 }): string | null {
-  if (!payload.name || !payload.email || !payload.subject || !payload.message) {
+  if (!payload.name || !payload.email || !payload.subject || !payload.message)
     return "Please complete all fields.";
-  }
   if (payload.name.length > 100) return "Name must be 100 characters or fewer.";
   if (payload.email.length > 254) return "Email address is too long.";
   if (!EMAIL_RE.test(payload.email)) return "Please enter a valid email address.";
@@ -39,30 +55,49 @@ function validatePayload(payload: {
 }
 
 export function ContactSection() {
-  // Double-submit guard — a ref so the check is always current regardless of render cycle.
+  // Double-submit guard — ref so the check is immune to stale closures.
   const submittingRef = useRef(false);
   const [loading, setLoading] = useState(false);
 
-  const turnstileRef = useRef<TurnstileHandle>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // Turnstile
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
-  function handleTurnstileVerify(token: string) {
-    setTurnstileToken(token);
+  function initTurnstile() {
+    if (!TURNSTILE_SITE_KEY || !turnstileContainerRef.current || widgetIdRef.current) return;
+    widgetIdRef.current =
+      window.turnstile?.render(turnstileContainerRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token) => setTurnstileToken(token),
+        "expired-callback": () => setTurnstileToken(""),
+        "error-callback": () => {
+          setTurnstileToken("");
+          toast.error("Bot verification failed. Please try again.");
+        },
+      }) ?? null;
   }
 
-  function handleTurnstileError() {
-    setTurnstileToken(null);
-    toast.error("Bot verification failed. Please try again.");
-  }
+  // Runs after every render so it catches the case where the script loads
+  // asynchronously after the initial mount. The widgetIdRef guard prevents
+  // double-rendering.
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.turnstile) {
+      initTurnstile();
+    }
+  });
 
-  function handleTurnstileExpire() {
-    setTurnstileToken(null);
+  function resetTurnstile() {
+    if (widgetIdRef.current && window.turnstile) {
+      window.turnstile.reset(widgetIdRef.current);
+    }
+    widgetIdRef.current = null;
+    setTurnstileToken("");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    // Double-submit prevention.
     if (submittingRef.current) return;
 
     const form = event.currentTarget;
@@ -75,14 +110,12 @@ export function ContactSection() {
       message: String(formData.get("message") ?? "").trim(),
     };
 
-    // Client-side validation (mirrors server-side rules).
     const validationError = validatePayload(payload);
     if (validationError) {
       toast.error(validationError);
       return;
     }
 
-    // Require Turnstile token when the widget is configured.
     if (TURNSTILE_SITE_KEY && !turnstileToken) {
       toast.error("Please complete the bot verification.");
       return;
@@ -106,19 +139,14 @@ export function ContactSection() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Request failed");
-      }
+      if (!response.ok) throw new Error("Request failed");
 
       toast.success("Message sent.");
       form.reset();
-      setTurnstileToken(null);
-      turnstileRef.current?.reset();
+      resetTurnstile();
     } catch {
       toast.error("Unable to send your message right now.");
-      // Reset Turnstile so the user can retry without refreshing.
-      setTurnstileToken(null);
-      turnstileRef.current?.reset();
+      resetTurnstile();
     } finally {
       submittingRef.current = false;
       setLoading(false);
@@ -170,13 +198,14 @@ export function ContactSection() {
             </div>
 
             {TURNSTILE_SITE_KEY && (
-              <TurnstileWidget
-                ref={turnstileRef}
-                siteKey={TURNSTILE_SITE_KEY}
-                onVerify={handleTurnstileVerify}
-                onError={handleTurnstileError}
-                onExpire={handleTurnstileExpire}
-              />
+              <>
+                <Script
+                  src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+                  strategy="afterInteractive"
+                  onLoad={initTurnstile}
+                />
+                <div ref={turnstileContainerRef} />
+              </>
             )}
 
             <Button

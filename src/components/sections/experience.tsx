@@ -18,7 +18,7 @@ export function ExperienceSection() {
         <SectionHeading
           eyebrow="Experience"
           title="Work Experience"
-          description="5+ years delivering across cloud engineering, serverless backends, and full-stack web development."
+          description="5 years progressing from frontline support into cloud and infrastructure engineering across AWS and Microsoft 365."
         />
         <motion.div
           className="space-y-6"
@@ -29,7 +29,7 @@ export function ExperienceSection() {
         >
           {experienceRoles.map((role, idx) => (
             <motion.article
-              key={role.company}
+              key={`${role.company}-${role.role}`}
               className="rounded-xl border border-border bg-card p-5 shadow-sm"
               variants={cardVariants}
               transition={{ duration: 0.5, ease: "easeOut" }}
