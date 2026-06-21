@@ -71,6 +71,32 @@ de-risking that window.
 
 ## 2. Cutover (minimize this window)
 
+> **⚠️ The first cutover is the MANUAL sequence below — not a merge.** The new
+> Pulumi program claims globally/account-unique names that the live Terraform
+> stack still holds (see the collision list). Until `terraform destroy` frees
+> them, `pulumi up` will *fail* on "already exists" (safe — it never clobbers),
+> so do **not** let `deploy.yml` run the first `pulumi up` via a merge before the
+> destroy. Disable/hold the Deploy workflow until step 4 is green, or run this
+> sequence by hand first; steady-state merges are fine thereafter.
+
+**Globally/account-unique names that must be freed by `terraform destroy` first**
+(for `domainName = jpcloudengineering.com`):
+
+| Resource | Name claimed by Pulumi | Scope |
+| --- | --- | --- |
+| S3 site bucket | `jpcloudengineering-com-site` | global |
+| S3 templates bucket | `jpcloudengineering-com-contact-templates` | global |
+| Lambda function | `jpcloudengineering-com-contact` | account+region |
+| API Gateway (HTTP API) | `jpcloudengineering-com-contact-api` | account+region |
+| CloudWatch log group | `/aws/lambda/jpcloudengineering-com-contact` | account+region |
+| CloudFront OAC | `jpcloudengineering.com-oac` | account |
+| CloudFront Function | `jpcloudengineering-com-site-uri-rewrite` | account |
+| SES domain identity | `jpcloudengineering.com` | account+region |
+| Cloudflare records | apex CNAME, `_amazonses` TXT, 3 DKIM CNAMEs, ACM-validation CNAME | per-zone name |
+
+Verify these match what the live Terraform actually owns before destroying — if a
+name differs, the two stacks won't collide and a name may linger after destroy.
+
 1. **`terraform destroy`** the existing stack (frees the S3 bucket name, the
    CloudFront distribution, ACM cert, SES identity, and the Cloudflare records TF
    owned). → **site + contact form go down here.**
@@ -93,8 +119,24 @@ de-risking that window.
    propagate; **contact-form email stays down until DKIM verifies** — minimized
    by the low TTLs from step 1.
 4. **Run the [manual test plan](./MANUAL_TEST_PLAN.md).**
-5. **Retire the Terraform state** (`jpeng-portfolio-tfstate` bucket + lockfile)
-   **only after** the new stack is verified green.
+5. **Retire the old Terraform** — work the teardown checklist below, **only
+   after** the new stack is verified green.
+
+### Teardown checklist (after step 4 is green)
+
+- [ ] `terraform state list` is empty / the stack is fully destroyed (no orphaned
+      S3 bucket, CloudFront distribution, Lambda, API, SES identity, or
+      Cloudflare records left behind).
+- [ ] Empty + delete the **`jpeng-portfolio-tfstate`** state bucket and remove
+      the TF lockfile (DynamoDB lock table, if used).
+- [ ] Confirm no leftover ACM certs or Route 53/Cloudflare records from the old
+      stack remain (especially the apex + DKIM records, now Pulumi-owned).
+- [ ] Disable the **GitLab** pipeline and the `mirror_to_github` schedule; revoke
+      the GitLab CI variables/tokens (`ROLE_ARN`, `GITHUB_TOKEN`, etc.).
+- [ ] Re-point the project's "source of truth" to GitHub; archive the GitLab repo
+      if it's no longer the upstream.
+- [ ] Re-enable the GitHub **Deploy** workflow (if you held it during cutover).
+- [ ] Final `pulumi preview` is clean (no drift) and stack outputs are present.
 
 ## 3. Steady state (every merge thereafter)
 
