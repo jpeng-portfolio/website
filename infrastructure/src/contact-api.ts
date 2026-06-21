@@ -163,6 +163,19 @@ export function createContactApi(
   });
 
   // --- Lambda function -------------------------------------------------------
+  // Fail loudly with a clear instruction if the package hasn't been built
+  // (CI builds it before every preview/up; locally you must build it first).
+  const lambdaZipAbs = path.resolve(LAMBDA_ZIP_PATH);
+  if (!fs.existsSync(lambdaZipAbs)) {
+    throw new Error(
+      `Contact Lambda package not found at "${lambdaZipAbs}".\n` +
+        `Build it first:\n` +
+        `  cd lambdas/contact && cargo lambda build --release --arm64 --output-format zip\n` +
+        `  then copy the produced target/lambda/*/bootstrap.zip to lambdas/contact/bootstrap.zip\n` +
+        `(CI builds and copies it automatically before preview/up.)`,
+    );
+  }
+
   const lambdaEnv: Record<string, pulumi.Input<string>> = {
     SENDER_EMAIL: config.senderEmail,
     CONTACT_EMAIL: config.contactEmail,
