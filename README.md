@@ -64,45 +64,29 @@ Payload shape:
 ```
 
 ## Environment variables
-- `NEXT_PUBLIC_CONTACT_API_URL` — public API endpoint for contact form submission.
-- `CONTACT_API_URL` — optional CI convenience variable that can be mapped to `NEXT_PUBLIC_CONTACT_API_URL` during pipeline builds.
+Build-time public env (must be set; the app fails loudly when required values are missing):
+- `NEXT_PUBLIC_CONTACT_API_URL` — public API endpoint for contact-form submission. On deploy this is taken from the Pulumi `contactApiUrl` stack output.
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` — public Cloudflare Turnstile site key.
 
-## GitLab CI/CD (tag-based release)
-This repository deploys on semver tags in the format `vX.X.X` (for example: `v1.0.0`).
+## CI/CD (GitHub Actions + Pulumi)
+CI/CD runs on **GitHub Actions** with PR gates and deploy-on-merge. Infrastructure is **Pulumi (TypeScript)** in [`infrastructure/`](./infrastructure) (state in Pulumi Cloud, AWS auth via GitHub OIDC). This replaces the previous GitLab CI + Terraform setup.
 
-Pipeline stages:
-1. **build** — installs dependencies and runs `npm run build` to produce `out/`.
-2. **test** — runs `npm run lint`.
-3. **deploy** — uses GitLab OIDC to assume an AWS role, syncs `out/` to S3, and invalidates CloudFront.
-4. **mirror** — mirrors the GitLab repository to GitHub on push/schedule pipelines.
+- **`.github/workflows/pr.yml`** — every PR runs the gates (`lint` → `typecheck` → `test:unit` → e2e + Lambda integration) **and `pulumi preview`** (infra-only diff posted to the PR). No production change.
+- **`.github/workflows/deploy.yml`** — push to the default branch runs the same gates, then `pulumi up` (provision) → build the site against the live contact API URL → `pulumi up` (publish `out/` + invalidate CloudFront). Doc-only changes don't deploy.
+- **`.github/workflows/_gates.yml`** — reusable gates shared by both.
 
-Required GitLab CI/CD variables:
-- `ROLE_ARN` — IAM role ARN created by infrastructure bootstrap (`gitlab_deploy_role_arn` output).
-- `AWS_DEFAULT_REGION` — AWS region (typically `us-east-1`).
-- `BUCKET_NAME` — Terraform output `bucket_name` from `../infrastructure/environments/prod`.
-- `DISTRIBUTION_ID` — Terraform output `distribution_id` from `../infrastructure/environments/prod`.
-- `NEXT_PUBLIC_CONTACT_API_URL` — public contact API URL used by the frontend build.
-- `GITHUB_OWNER` — GitHub owner/org used by the mirror target URL.
-- `GITHUB_REPO` — GitHub repository name used by the mirror target URL.
-- `GITHUB_USERNAME` — GitHub username used for mirror authentication.
-- `GITHUB_TOKEN` — GitHub token (PAT/fine-grained token) used for mirror authentication.
-- Optional alias: `CONTACT_API_URL` (if set, the pipeline maps it to `NEXT_PUBLIC_CONTACT_API_URL` when that variable is unset).
+Required GitHub Actions configuration:
+- `AWS_ROLE_ARN` (secret) — existing GitHub→AWS OIDC role, reused for `preview` and `up`.
+- `PULUMI_ACCESS_TOKEN` (secret) — Pulumi Cloud backend auth.
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (variable) — public Turnstile site key.
 
-GitLab provides these required runtime variables automatically (no manual setup needed): `CI_JOB_TOKEN`, `CI_SERVER_HOST`, `CI_PROJECT_PATH`, `CI_PIPELINE_ID`, and `GITLAB_OIDC_TOKEN`.
+Infrastructure config/secrets live in the Pulumi stack — see [`infrastructure/MIGRATION_RUNBOOK.md`](./infrastructure/MIGRATION_RUNBOOK.md) for the GitLab→GitHub variable mapping, the clean teardown + recreate cutover, and rollback notes, and [`infrastructure/MANUAL_TEST_PLAN.md`](./infrastructure/MANUAL_TEST_PLAN.md) for post-cutover verification.
 
-Variable helper script:
-```powershell
-.\scripts\set-gitlab-vars.ps1 -GitLabToken "<gitlab_pat_with_api_scope>" -ProjectId "<numeric_project_id>"
-```
-Optional flags:
-- `-Protected $false` to create non-protected variables.
-- `-IncludeContactAlias` to also set `CONTACT_API_URL`.
-
-Release command example:
-```bash
-git tag v1.0.0
-git push --tags
-```
+## Tests
+- `npm run typecheck` — `tsc --noEmit`.
+- `npm run test:unit` — Vitest unit tests for `src/lib` pure logic.
+- `npm run test:e2e` — Playwright against the built static export (offline, Chromium).
+- Contact Lambda: `cargo test` in [`infrastructure/lambdas/contact`](./infrastructure/lambdas/contact).
 
 ## Customization checklist
 - Update social links in `src/config/site.ts`

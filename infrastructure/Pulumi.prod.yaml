@@ -1,0 +1,41 @@
+# Stack config for the single production stack:
+
+#   jpaquette2323-gmail-com/jpeng-portfolio-infra/prod
+
+#
+
+# Non-secret values are committed here. SECRETS ARE NOT COMMITTED — seed them
+
+# once with `pulumi config set --secret` (see infrastructure/MIGRATION_RUNBOOK.md):
+
+#   pulumi config set --secret jpeng-portfolio-infra:cloudflareApiToken <token>
+
+#   pulumi config set --secret jpeng-portfolio-infra:turnstileSecretKey <key>   # optional
+
+#
+
+# Required (the program FAILS LOUDLY if a required value is missing at preview/up):
+
+#   domainName, cloudflareZoneId, senderEmail, contactEmail, cloudflareApiToken
+
+config:
+  aws:region: us-east-1
+  jpeng-portfolio-infra:domainName: jpcloudengineering.com
+  # Cloudflare zone id for the domain above (Cloudflare dashboard -> Overview).
+
+  jpeng-portfolio-infra:cloudflareZoneId: b80f22942623d4cfb51a3ad401cecab8
+  # SES "From" address (must be on the verified domain identity).
+
+  jpeng-portfolio-infra:senderEmail: no-reply@jpcloudengineering.com
+  # Where contact-form notifications are delivered.
+
+  jpeng-portfolio-infra:contactEmail: contact@jpcloudengineering.com
+  # DNS record TTL (seconds). Keep low around a cutover for fast propagation.
+
+  jpeng-portfolio-infra:dnsTtl: "300"
+  # Whether `pulumi up` also uploads the built `out/` and invalidates CloudFront.
+
+  # PR previews set this to false (infra-only diff); the deploy publish pass sets true.
+  jpeng-portfolio-infra:publishContent: "false"
+  jpeng-portfolio-infra:cloudflareApiToken:
+    secure: AAABAJh+52m19Gh4ToSRsZN2ceVOwo3zB4zrB8JZePEwmAxzdntdlzOx0A013lNvQ1g482AaJSQg3giqOUdYjuWG2elUyO6KiY7p1fTV9bW1EjrVBA==

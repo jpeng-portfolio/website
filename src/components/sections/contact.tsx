@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { SocialLinks } from "@/components/shared/social-links";
+import { validateContactPayload } from "@/lib/contact-validation";
 
 declare global {
   interface Window {
@@ -35,24 +36,6 @@ const fadeInUp = {
 
 const CONTACT_API_URL = process.env.NEXT_PUBLIC_CONTACT_API_URL;
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function validatePayload(payload: {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}): string | null {
-  if (!payload.name || !payload.email || !payload.subject || !payload.message)
-    return "Please complete all fields.";
-  if (payload.name.length > 100) return "Name must be 100 characters or fewer.";
-  if (payload.email.length > 254) return "Email address is too long.";
-  if (!EMAIL_RE.test(payload.email)) return "Please enter a valid email address.";
-  if (payload.subject.length > 200) return "Subject must be 200 characters or fewer.";
-  if (payload.message.length > 5000) return "Message must be 5,000 characters or fewer.";
-  return null;
-}
 
 export function ContactSection() {
   // Double-submit guard — ref so the check is immune to stale closures.
@@ -110,7 +93,7 @@ export function ContactSection() {
       message: String(formData.get("message") ?? "").trim(),
     };
 
-    const validationError = validatePayload(payload);
+    const validationError = validateContactPayload(payload);
     if (validationError) {
       toast.error(validationError);
       return;

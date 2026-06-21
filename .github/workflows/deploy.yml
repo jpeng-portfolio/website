@@ -1,0 +1,115 @@
+# Deploy-on-merge workflow: push to the default branch runs the same gates, then
+# provisions infra, builds the site with the live contact API URL, and publishes
+# (uploads out/ + invalidates CloudFront) in one production deploy. The
+# production deploy is never auto-cancelled mid-run. Doc-only merges don't deploy.
+name: Deploy
+
+on:
+  push:
+    branches: [master, main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+      - ".gitignore"
+      - ".idea/**"
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    uses: ./.github/workflows/_gates.yml
+    secrets: inherit
+
+  deploy:
+    name: provision + publish
+    needs: gates
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write # OIDC -> AWS
+    env:
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      PULUMI_STACK: jpaquette2323-gmail-com/jpeng-portfolio-infra/prod
+      AWS_REGION: us-east-1
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail fast on missing required secrets
+        run: |
+          test -n "${{ secrets.AWS_ROLE_ARN }}" || { echo "::error::AWS_ROLE_ARN secret is required"; exit 1; }
+          test -n "${{ secrets.PULUMI_ACCESS_TOKEN }}" || { echo "::error::PULUMI_ACCESS_TOKEN secret is required"; exit 1; }
+          test -n "${NEXT_PUBLIC_TURNSTILE_SITE_KEY}" || { echo "::error::NEXT_PUBLIC_TURNSTILE_SITE_KEY variable is required"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # --- Build the contact Lambda (arm64 zip) --------------------------------
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: infrastructure/lambdas/contact
+      - name: Build contact Lambda
+        run: |
+          pip3 install --quiet ziglang cargo-lambda
+          cargo lambda build --release --arm64 --output-format zip
+          cp "$(find target/lambda -name bootstrap.zip | head -1)" bootstrap.zip
+        working-directory: infrastructure/lambdas/contact
+
+      # --- Pulumi + AWS --------------------------------------------------------
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v6
+
+      - name: Install infra deps
+        run: npm ci || npm install
+        working-directory: infrastructure
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      # Phase 1: converge infra (creates/updates the API, SES, CloudFront, etc.)
+      # without uploading content, then read the contact API URL for the build.
+      - name: Provision infrastructure
+        working-directory: infrastructure
+        run: |
+          pulumi stack select "$PULUMI_STACK"
+          pulumi up --yes --skip-preview \
+            -c jpeng-portfolio-infra:publishContent=false
+          URL="$(pulumi stack output contactApiUrl)"
+          test -n "$URL" || { echo "::error::contactApiUrl output is empty"; exit 1; }
+          echo "NEXT_PUBLIC_CONTACT_API_URL=$URL" >> "$GITHUB_ENV"
+
+      # Build the static export against the real contact API URL.
+      - name: Build site
+        run: |
+          npm ci
+          npm run build
+
+      # Phase 2: upload out/ to the site bucket and invalidate CloudFront.
+      - name: Publish site
+        working-directory: infrastructure
+        run: |
+          pulumi up --yes --skip-preview \
+            -c jpeng-portfolio-infra:publishContent=true
+
+      - name: Deploy summary
+        working-directory: infrastructure
+        run: |
+          {
+            echo "### Production deploy complete";
+            echo "- Site bucket: \`$(pulumi stack output siteBucketName)\`";
+            echo "- Distribution: \`$(pulumi stack output distributionId)\`";
+            echo "- Contact API: \`$(pulumi stack output contactApiUrl)\`";
+          } >> "$GITHUB_STEP_SUMMARY"

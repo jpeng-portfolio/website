@@ -1,0 +1,6 @@
+node_modules/
+bin/
+*.tsbuildinfo
+# Rust build artifacts for the contact lambda
+lambdas/contact/target/
+lambdas/contact/bootstrap.zip
