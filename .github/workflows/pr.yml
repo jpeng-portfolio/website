@@ -1,0 +1,76 @@
+# PR gate workflow: every PR against the default branch runs the full quality
+# gates AND `pulumi preview` to surface the infra diff. No pulumi up, no prod
+# change. Superseded PR runs are cancelled.
+name: PR
+
+on:
+  pull_request:
+    branches: [master, main]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    uses: ./.github/workflows/_gates.yml
+    secrets: inherit
+
+  preview:
+    name: pulumi preview
+    needs: gates
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC -> AWS
+      pull-requests: write # post the preview diff as a PR comment
+    env:
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      AWS_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail fast if AWS_ROLE_ARN is missing
+        run: |
+          test -n "${{ secrets.AWS_ROLE_ARN }}" || { echo "::error::AWS_ROLE_ARN secret is required"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Build the Lambda artifact so the preview hashes the real package.
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: infrastructure/lambdas/contact
+      - name: Build contact Lambda (arm64 zip)
+        run: |
+          pip3 install --quiet ziglang cargo-lambda
+          cargo lambda build --release --arm64 --output-format zip
+          cp "$(find target/lambda -name bootstrap.zip | head -1)" bootstrap.zip
+        working-directory: infrastructure/lambdas/contact
+
+      - name: Install infra deps
+        run: npm ci || npm install
+        working-directory: infrastructure
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Pulumi preview (infra-only diff)
+        uses: pulumi/actions@v6
+        with:
+          command: preview
+          stack-name: jpaquette2323-gmail-com/jpeng-portfolio-infra/prod
+          work-dir: infrastructure
+          comment-on-pr: true
+          diff: true
+          # PR previews show the infra diff only — never the per-file object churn.
+          config-map: '{"jpeng-portfolio-infra:publishContent": {"value": "false", "secret": false}}'
