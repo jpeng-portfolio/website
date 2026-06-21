@@ -4,10 +4,8 @@ runtime:
   options:
     packagemanager: npm
 description: >-
-  Static S3 + CloudFront hosting and the serverless contact API (API Gateway v2
-  -> Rust Lambda -> SES) for the jpeng-portfolio website. Serverless-first,
-  region-pinned to us-east-1 (CloudFront ACM requirement). State lives in Pulumi
-  Cloud. DNS is managed via the Cloudflare provider.
+  Static S3 + CloudFront site and serverless contact API (API Gateway v2 -> Rust
+  Lambda -> SES) for the jpeng-portfolio website. Serverless-first, us-east-1.
 config:
   # Region is pinned to us-east-1 because the CloudFront viewer certificate must
   # be issued by ACM in us-east-1.
