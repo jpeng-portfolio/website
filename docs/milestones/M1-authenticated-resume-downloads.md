@@ -1,6 +1,9 @@
 # M1 · Owner-gated resume downloads (single-source PDF + DOCX)
 
-> Size: XL · Depends on: GitHub Actions + Pulumi migration (`MIGRATION_PROMPT.md`) for the CI (M1.3) and IaC (M1.4–M1.5) phases.
+> Size: XL · Builds on: the **landed** GitHub Actions + Pulumi foundation — the `Deploy`/`PR` workflows
+> (`.github/workflows/`) and the `infrastructure/` Pulumi program (`dns` / `static-site` / `contact-api`,
+> composed in `index.ts`). M1 **extends** both: a new auth module + a protected CloudFront behavior in the
+> Pulumi program, and a résumé-generation step in the deploy build.
 
 ## Goal
 Make the website the **single source of truth** for résumé content, have the **pipeline regenerate**
@@ -57,10 +60,12 @@ documents; only Jason — after signing in — can download them.
   timestamps in content) so reruns are idempotent.
 
 ### CI pipeline
-- The deploy/PR workflows run `resume:build` (install Playwright Chromium) **before** `next build`;
-  contact secrets are injected from CI. A generation failure **fails the build** (fail-loud).
-- Files publish to the gated `/resume/files/*` path; the S3 bucket stays private (OAC) — the only way in
-  is via CloudFront, which enforces auth on that behavior.
+- Slot `resume:build` (install Playwright Chromium) **before `npm run build`** in `deploy.yml`'s
+  **Build site** step (which already runs between the two-phase `pulumi up` — provision → build → publish)
+  and in `_gates.yml`'s **e2e** build. Contact details are injected from a CI secret (`RESUME_CONTACT_JSON`);
+  a generation failure **fails the build** (fail-loud).
+- Files publish to the gated `/resume/files/*` path via the existing publish phase (`publishContent=true`);
+  the S3 bucket stays private (OAC) — the only way in is via CloudFront, which enforces auth on that behavior.
 
 ### Auth (owner-only)
 - **Cognito** user pool + app client + Hosted UI domain; **self-sign-up disabled**, a **single user**
@@ -107,9 +112,10 @@ behavior for `/resume/files/*` with the viewer-request association. Region pinne
 - **M1.2.3** (S) — `scripts/resume/build.ts` orchestrator + `resume:build` script; output to
   `public/resume/files/`; deterministic/idempotent. *(Integration step — lands after 1.2.1/1.2.2.)*
 
-### M1.3 — CI regenerates the résumé  *(Depends on: M1.2, GH Actions migration)*
-- **M1.3.1** (M) — Add résumé generation to the GitHub Actions build (install Chromium, inject contact
-  secret, run `resume:build` before `next build`); publish `out/resume/files/*`. Doc-gen failure fails the build.
+### M1.3 — CI regenerates the résumé  *(Depends on: M1.2)*
+- **M1.3.1** (M) — Add résumé generation to `deploy.yml`'s **Build site** step and `_gates.yml`'s **e2e**
+  build (install Chromium, inject `RESUME_CONTACT_JSON` secret, run `resume:build` before `npm run build`);
+  the publish phase ships `out/resume/files/*`. Doc-gen failure fails the build.
 - **M1.3.2** (S) — CI assertion that both files are produced and non-empty; generation is deterministic.
 
 ### M1.4 — Auth building blocks  *(Depends on: —, can run parallel to M1.1–M1.3)*
@@ -146,9 +152,10 @@ behavior for `/resume/files/*` with the viewer-request association. Region pinne
 - **M1.7** — Full sign-in→download flow verified end-to-end; IAM least-privilege confirmed; a11y/error states done.
 
 ## Risks / open questions
-- **Foundation dependency.** M1.3 (CI) and M1.4–M1.5 (Pulumi) assume the **GitHub Actions + Pulumi
-  migration** has landed. Today the repo is still GitLab CI + Terraform. Either sequence this milestone
-  after that migration, or target whatever CI/IaC is live when those phases start.
+- **Single CloudFront distribution.** The auth phases add a protected `/resume/files/*` behavior to the
+  **existing** distribution owned by `infrastructure/src/static-site.ts` — not a new distribution. The
+  Pulumi change must extend that module in place (Lambda@Edge assoc + behavior) so `pulumi preview` shows
+  an in-place update, and the deploy's two-phase `pulumi up` still converges cleanly.
 - **Lambda@Edge limits.** No runtime env vars (bake config at deploy), us-east-1 only, code-size caps,
   and minutes-long propagation on each change — slows the auth phases' iteration.
 - **Contact details exposure.** Must come from CI secrets / Pulumi config, never committed, since the repo

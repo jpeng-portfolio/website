@@ -8,20 +8,21 @@ You are opening a PR and then babysitting its CI gates until they're green. Invo
 IS the user's explicit "open the PR" authorization (the repo's default is human-opened PRs — see `CLAUDE.md`).
 
 > Context: `jpeng-portfolio/website` is a static Next.js 16 site (S3 + CloudFront), CI/CD on
-> **GitHub Actions** with **Pulumi** IaC (migrating off GitLab CI + Terraform — see `MIGRATION_PROMPT.md`).
-> Default branch is **`master`**. Unlike some repos, this one has **no per-PR preview environment** — a
-> PR runs the **gates** (`lint` → `typecheck` → `unit` → `integration`) **plus `pulumi preview`** to
-> surface the infra diff; no `pulumi up`, no production change happens until merge. So "green" here means
-> *all gate checks + a clean preview*, not a deployed PR stage.
+> **GitHub Actions** with **Pulumi** IaC (`infrastructure/`, Pulumi Cloud, one `prod` stack).
+> Default branch is **`master`**. This repo has **no per-PR preview environment** — the **PR** workflow
+> (`.github/workflows/pr.yml`) runs the reusable **gates** (`lint` → `typecheck` → `unit` →
+> `e2e` + the contact-Lambda `cargo test`) **plus a `pulumi preview`** that comments the infra diff on
+> the PR; no `pulumi up`, no production change happens until merge. So "green" here means *all gate
+> checks + a clean preview*, not a deployed PR stage.
 
 ## 1. Pre-flight
 - **Abort** if the current branch is `master`/`main`.
-- Ensure work is committed and the branch is pushed. Run the gates that exist locally from the repo root —
-  at minimum `npm run lint`, plus `npm run typecheck` / `npm run test:unit` / `npm run test:e2e` **once
-  those scripts exist** (they're planned in `MIGRATION_PROMPT.md`; only `lint` ships today). Everything
-  you run must exit 0 before opening the PR. Fix failures first; never `--no-verify`.
-- Discard build-cache noise before committing: `git checkout -- tsconfig.tsbuildinfo` (and any
-  `*.tsbuildinfo`) if the build wrote one.
+- Ensure work is committed and the branch is pushed. Run the gates locally from the repo root —
+  `npm run lint`, `npm run typecheck`, `npm run test:unit` (and `npm run test:e2e` when practical: it
+  builds the static export and needs Chromium via `npx playwright install chromium`). If the change
+  touches `infrastructure/`, the contact Lambda gate is `cargo test` in `infrastructure/lambdas/contact`.
+  Everything you run must exit 0 before opening the PR. Fix failures first; never `--no-verify`.
+- Discard any build-cache noise (e.g. a stray `*.tsbuildinfo`) before committing.
 - Resolve the **issue** this closes: `$1` if given, else infer from the branch name / commit messages.
   If none applies, that's fine — just omit the `Closes #N` line.
 
@@ -34,8 +35,8 @@ IS the user's explicit "open the PR" authorization (the repo's default is human-
   `Closes #<issue>` if there is one. If the change touches UI, note the real-browser check you ran (per `CLAUDE.md`).
 
 ## 3. Subscribe, then stop
-- The push/open triggers the **CI** workflow: the gates (`lint` → `typecheck` → `unit` → `integration`)
-  **+ `pulumi preview`**.
+- The push/open triggers the **PR** workflow (`pr.yml`): the reusable gates
+  (`lint` → `typecheck` → `unit` → `e2e` + contact-Lambda `cargo test`) **+ a `pulumi preview`** comment.
 - Call `mcp__github__subscribe_pr_activity` for the new PR, then **END YOUR TURN.**
 - **Do NOT poll with `sleep`, `gh run watch`, or repeated status checks.** CI / review events arrive as
   `<github-webhook-activity>` messages that wake this session — that is the monitor.

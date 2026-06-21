@@ -65,16 +65,18 @@ For the resolved issue number (skip if there is no tracking issue):
 - If the issue is a **phase of an epic**, tick its checkbox in the epic issue body.
 
 ## 5. Watch the production deploy
-The squash-merge pushed to `master`, triggering the **Deploy** workflow (GitHub Actions deploy-on-merge,
-per `MIGRATION_PROMPT.md`): gates → **`pulumi up`** → publish the static site to S3 + invalidate CloudFront.
-Watch it to a terminal state before the smoke test — there's no point testing production until the new
-build is actually live.
+The squash-merge pushed to `master`, triggering the **Deploy** workflow (`.github/workflows/deploy.yml`):
+gates → **two-phase `pulumi up`** (provision `publishContent=false` → `npm run build` against the live
+`contactApiUrl` → publish `publishContent=true`: upload `out/` + invalidate CloudFront). Watch it to a
+terminal state before the smoke test — there's no point testing production until the new build is live.
 
-- **Find the run.** Resolve the merge SHA (`gh api repos/jpeng-portfolio/website/commits/master --jq .sha`),
-  list recent master push runs for the deploy workflow with `mcp__github__actions_list`
-  (`method: list_workflow_runs`, `branch: master`, `event: push`), and pick the run whose `head_sha` matches.
-- **Wait for it.** `pulumi up` + S3 sync + CloudFront invalidation takes several minutes; re-check every
-  minute or two — no tight `sleep` loop.
+- **Doc-only merge?** `deploy.yml` has `paths-ignore` (`**.md`, `docs/**`, `.claude/**`, editor configs); if the
+  whole merge matched those there's **no** Deploy run and nothing new shipped — skip the smoke test and say so.
+- **Find the run.** Otherwise resolve the merge SHA (`gh api repos/jpeng-portfolio/website/commits/master --jq .sha`),
+  list recent master push runs with `mcp__github__actions_list` (`method: list_workflow_runs`,
+  `resource_id: deploy.yml`, `branch: master`, `event: push`), and pick the run whose `head_sha` matches.
+- **Wait for it.** The two `pulumi up` phases + the static build take several minutes (`deploy-production`
+  concurrency never auto-cancels mid-run); re-check every minute or two — no tight `sleep` loop.
 - **If it fails:** open the failing job's logs (`mcp__github__get_job_logs`, `failed_only: true`,
   `return_content: true`) and diagnose:
   - **Flaky / infra** → re-run and re-watch.

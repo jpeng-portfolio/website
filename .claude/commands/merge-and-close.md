@@ -10,10 +10,14 @@ run the whole flow, but **stop immediately** (with a one-line reason) if any **A
 condition below trips. Do not start new work after finishing.
 
 > Context: `jpeng-portfolio/website` is a static Next.js 16 site exported to `out/` and served
-> from **S3 + CloudFront**. CI/CD is **GitHub Actions** with **Pulumi** IaC (migrating off
-> GitLab CI + Terraform — see `MIGRATION_PROMPT.md`). The default branch is **`master`**. A
-> merge to `master` runs the gates (`lint` → `typecheck` → `unit` → `integration`) and then
-> **`pulumi up` + publishes the static site** as the single `production` deploy.
+> from **S3 + CloudFront**. CI/CD is **GitHub Actions** with **Pulumi** IaC (`infrastructure/`,
+> Pulumi Cloud, one `prod` stack). The default branch is **`master`**. A merge to `master` runs
+> the **Deploy** workflow (`.github/workflows/deploy.yml`): the reusable gates
+> (`lint` → `typecheck` → `unit` → `e2e` + contact-Lambda `cargo test`), then a **two-phase
+> `pulumi up`** — provision infra (`publishContent=false`) → read `contactApiUrl` → `npm run build`
+> the static export → publish (`publishContent=true`: upload `out/` + invalidate CloudFront) — as
+> the single `production` deploy. `deploy.yml` **ignores doc/tooling-only pushes** (`**.md`,
+> `docs/**`, `.claude/**`, editor configs), so those merges produce **no** Deploy run.
 
 ## 0. Resolve the target
 - `$1` may be a PR number **or** an issue number; if empty, use the open PR for the **current branch**.
@@ -28,7 +32,8 @@ condition below trips. Do not start new work after finishing.
 ## 1. Verify it's safe to merge
 - Read the PR (`mcp__github__pull_request_read` or `gh pr view`): confirm it is **mergeable**
   (no conflicts), **not a draft**, and its **required checks are green** (statusCheckRollup / `gh pr checks`).
-  The PR gate runs the app gates plus **`pulumi preview`** — the preview must be clean too, not just the tests.
+  The **PR** workflow (`pr.yml`) runs the gates (lint/typecheck/unit/e2e/lambda) plus a
+  **`pulumi preview`** that comments the infra diff — the preview must be clean too, not just the tests.
 - **Abort** with a one-line reason if checks are red, the PR is conflicted, or it's still a draft.
   Don't merge a red, conflicted, or draft PR.
 - The repo **squash-merges**, so the **PR title becomes the commit subject** and must be a valid
@@ -63,30 +68,31 @@ For the resolved issue number (skip this whole step if there is no tracking issu
 - If the issue is a **phase of an epic**, tick its checkbox in the epic issue body.
 
 ## 5. Watch the production deploy — don't walk away from a broken master
-The squash-merge pushed to `master`, which triggers the **Deploy** workflow (the GitHub Actions
-deploy-on-merge workflow under `.github/workflows/`, per `MIGRATION_PROMPT.md`) → it runs the gates,
-then **`pulumi up`** and **publishes the static site** to S3 + invalidates CloudFront. A merge that
+The squash-merge pushed to `master`, which triggers the **Deploy** workflow (`.github/workflows/deploy.yml`)
+→ gates, then the **two-phase `pulumi up`** (provision `publishContent=false` → `npm run build` against the
+live `contactApiUrl` → publish `publishContent=true`: upload `out/` + invalidate CloudFront). A merge that
 red-deploys production is **not** "done", so watch this run to a terminal state before you stop.
 
-- **Find the run.** It's the deploy run for the **merge commit** on `master`. Resolve the merge SHA
-  (`gh api repos/jpeng-portfolio/website/commits/master --jq .sha`), then list recent master push
-  runs with `mcp__github__actions_list` (`method: list_workflow_runs`, the deploy workflow,
-  filter `branch: master`, `event: push`) and pick the run whose `head_sha` matches. (If the GitHub
-  Actions migration hasn't landed yet, there may be no deploy run — say so and stop here.)
-- **Wait for it.** A `pulumi up` + S3 sync + CloudFront invalidation takes several minutes. Re-check the
-  run's status periodically (every minute or two) — do **not** spin in a tight `sleep` loop. (`gh run watch`
-  may not resolve the repo's remote in this environment; the MCP `actions_list` / `get_job_logs` tools and
-  `gh api` with an explicit repo path always work.)
+- **Doc-only merge?** `deploy.yml` has `paths-ignore` (`**.md`, `docs/**`, `.claude/**`, editor configs). If
+  every file in the merge matched those, **no Deploy run is created** — that's expected; note it and you're done.
+- **Find the run.** Otherwise it's the `Deploy` run for the **merge commit** on `master`. Resolve the merge SHA
+  (`gh api repos/jpeng-portfolio/website/commits/master --jq .sha`), then list recent master push runs with
+  `mcp__github__actions_list` (`method: list_workflow_runs`, `resource_id: deploy.yml`, filter `branch: master`,
+  `event: push`) and pick the run whose `head_sha` matches.
+- **Wait for it.** The two `pulumi up` phases + the static build take several minutes (the `deploy-production`
+  concurrency group never auto-cancels mid-run). Re-check the run's status periodically (every minute or two) —
+  do **not** spin in a tight `sleep` loop. (`gh run watch` may not resolve the repo's remote in this environment;
+  the MCP `actions_list` / `get_job_logs` tools and `gh api` with an explicit repo path always work.)
 - **If it fails:** open the failing job's logs (`mcp__github__get_job_logs`, `failed_only: true`,
   `return_content: true`) and diagnose. Then:
   - **Flaky / infra** failure (transient AWS/network, a Pulumi Cloud hiccup) → re-run the run and re-watch.
   - **Real regression from this change** (a failing gate, or a bad `pulumi up` / `pulumi preview` diff) →
     fix it on a **new** branch + PR (never push to `master` directly), and tell the user.
-  - **A `pulumi up` that errored mid-apply** is the dangerous case — infra state may be partially applied.
-    Do **not** blindly re-run; read the error, check `pulumi` state if needed, and **stop and report**
-    rather than risk a half-migrated production stack.
+  - **A `pulumi up` that errored mid-apply** is the dangerous case — infra state may be partially applied (e.g.
+    failed between the provision and publish phases). Do **not** blindly re-run; read the error, check `pulumi`
+    state if needed, and **stop and report** rather than risk a half-applied production stack.
   - If the fix is ambiguous or large, **stop and report the diagnosis** instead of guessing.
-- **If it's green:** note that `production` deployed successfully (site published, CloudFront invalidated).
+- **If it's green:** note that `production` deployed successfully (infra converged, site published, CloudFront invalidated).
 
 ## 6. Finish — then stop
 Print a short summary and stop (end the turn; don't pick up new work):
