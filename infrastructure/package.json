@@ -1,0 +1,21 @@
+{
+  "name": "jpeng-portfolio-infra",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pulumi (TypeScript) infrastructure for the jpeng-portfolio website — static S3 + CloudFront site and the serverless contact API.",
+  "main": "index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^7.10.0",
+    "@pulumi/cloudflare": "^6.16.0",
+    "@pulumi/command": "^1.1.0",
+    "@pulumi/pulumi": "^3.205.0",
+    "@pulumi/synced-folder": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}
