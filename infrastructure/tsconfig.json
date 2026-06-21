@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "outDir": "bin",
+    "target": "es2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "pretty": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "lib": ["es2020"]
+  },
+  "files": ["index.ts", "src/config.ts", "src/static-site.ts", "src/contact-api.ts", "src/dns.ts"]
+}

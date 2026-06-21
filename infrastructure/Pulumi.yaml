@@ -1,0 +1,12 @@
+name: jpeng-portfolio-infra
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: >-
+  Static S3 + CloudFront site and serverless contact API (API Gateway v2 -> Rust
+  Lambda -> SES) for the jpeng-portfolio website. Serverless-first, us-east-1.
+config:
+  # Region is pinned to us-east-1 because the CloudFront viewer certificate must
+  # be issued by ACM in us-east-1.
+  aws:region: us-east-1

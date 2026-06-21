@@ -1,0 +1,42 @@
+[package]
+name = "contact-lambda"
+version = "0.1.0"
+edition = "2021"
+description = "Contact-form Lambda behind API Gateway v2 (HTTP API): validates input, verifies Cloudflare Turnstile, and sends SES email from S3-stored HTML templates."
+license = "MIT"
+publish = false
+
+[lib]
+name = "contact_lambda"
+path = "src/lib.rs"
+
+[[bin]]
+name = "bootstrap"
+path = "src/main.rs"
+
+[dependencies]
+lambda_http = "0.13"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+async-trait = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter"] }
+
+# AWS
+aws-config = { version = "1", features = ["behavior-version-latest"] }
+aws-sdk-sesv2 = "1"
+aws-sdk-s3 = "1"
+
+# Turnstile verification
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
