@@ -39,7 +39,7 @@ export function createContactApi(
   const slug = config.domainName.replace(/\./g, "-");
 
   // --- Email template store --------------------------------------------------
-  const templatesBucket = new aws.s3.BucketV2("contact-templates", {
+  const templatesBucket = new aws.s3.Bucket("contact-templates", {
     bucket: `${slug}-contact-templates`,
     tags: { ...commonTags, role: "contact-api" },
   });
@@ -52,7 +52,7 @@ export function createContactApi(
     restrictPublicBuckets: true,
   });
 
-  new aws.s3.BucketServerSideEncryptionConfigurationV2("contact-templates-sse", {
+  new aws.s3.BucketServerSideEncryptionConfiguration("contact-templates-sse", {
     bucket: templatesBucket.id,
     rules: [{ applyServerSideEncryptionByDefault: { sseAlgorithm: "AES256" } }],
   });

@@ -16,7 +16,7 @@ import { dnsRecord } from "./dns";
  * `out/` and invalidates the distribution in the same `pulumi up`.
  *
  * Resource type tokens verified via the Pulumi MCP server:
- *   aws:s3/bucketV2:BucketV2, aws:cloudfront/originAccessControl:OriginAccessControl,
+ *   aws:s3/bucket:Bucket, aws:cloudfront/originAccessControl:OriginAccessControl,
  *   aws:cloudfront/function:Function (runtime cloudfront-js-2.0),
  *   aws:cloudfront/distribution:Distribution, aws:acm/certificate:Certificate,
  *   cloudflare:index/dnsRecord:DnsRecord, synced-folder:index:S3BucketFolder,
@@ -72,7 +72,7 @@ export function createStaticSite(
   // Dot-free bucket name: a dotted name (e.g. the domain) breaks CloudFront's
   // HTTPS connection to the S3 origin because the `*.s3.<region>.amazonaws.com`
   // certificate can't match the extra dot levels.
-  const bucket = new aws.s3.BucketV2("site", {
+  const bucket = new aws.s3.Bucket("site", {
     bucket: `${config.domainName.replace(/\./g, "-")}-site`,
     tags: { ...commonTags, role: "static-site" },
   });
@@ -93,7 +93,7 @@ export function createStaticSite(
     restrictPublicBuckets: true,
   });
 
-  new aws.s3.BucketServerSideEncryptionConfigurationV2("site-encryption", {
+  new aws.s3.BucketServerSideEncryptionConfiguration("site-encryption", {
     bucket: bucket.id,
     rules: [{ applyServerSideEncryptionByDefault: { sseAlgorithm: "AES256" } }],
   });

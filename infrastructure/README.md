@@ -45,7 +45,7 @@ infrastructure/
 
 ## Resource types verified via the Pulumi MCP server
 
-`aws:s3/bucketV2:BucketV2`, `aws:cloudfront/originAccessControl:OriginAccessControl`,
+`aws:s3/bucket:Bucket`, `aws:cloudfront/originAccessControl:OriginAccessControl`,
 `aws:cloudfront/function:Function`, `aws:cloudfront/distribution:Distribution`,
 `aws:acm/certificate:Certificate`, `aws:apigatewayv2/api:Api`,
 `aws:lambda/function:Function`, `aws:ses/domainIdentity:DomainIdentity`,
