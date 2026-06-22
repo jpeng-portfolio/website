@@ -58,6 +58,11 @@ jobs:
         run: npm ci || npm install
         working-directory: infrastructure
 
+      # The Pulumi program fails loud without the bundled edge authorizer.
+      - name: Build edge authorizer bundle
+        run: npm ci && npm run build
+        working-directory: infrastructure/lambdas/edge-authorizer
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:

@@ -82,6 +82,11 @@ jobs:
         run: npm ci || npm install
         working-directory: infrastructure
 
+      # The Pulumi program fails loud without the bundled edge authorizer.
+      - name: Build edge authorizer bundle
+        run: npm ci && npm run build
+        working-directory: infrastructure/lambdas/edge-authorizer
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -99,6 +104,20 @@ jobs:
           URL="$(pulumi stack output contactApiUrl)"
           test -n "$URL" || { echo "::error::contactApiUrl output is empty"; exit 1; }
           echo "NEXT_PUBLIC_CONTACT_API_URL=$URL" >> "$GITHUB_ENV"
+
+          # Cognito outputs -> the résumé portal build (NEXT_PUBLIC_COGNITO_*).
+          POOL_ID="$(pulumi stack output cognitoUserPoolId)"
+          CLIENT_ID="$(pulumi stack output cognitoClientId)"
+          HOSTED_UI="$(pulumi stack output cognitoHostedUiDomain)"
+          REGION="$(pulumi stack output cognitoRegion)"
+          for pair in \
+            "NEXT_PUBLIC_COGNITO_USER_POOL_ID=$POOL_ID" \
+            "NEXT_PUBLIC_COGNITO_CLIENT_ID=$CLIENT_ID" \
+            "NEXT_PUBLIC_COGNITO_HOSTED_UI_DOMAIN=$HOSTED_UI" \
+            "NEXT_PUBLIC_COGNITO_REGION=$REGION"; do
+            test -n "${pair#*=}" || { echo "::error::missing Cognito stack output for ${pair%%=*}"; exit 1; }
+            echo "$pair" >> "$GITHUB_ENV"
+          done
 
       # Regenerate the résumé documents from site content, then build the static
       # export against the real contact API URL. `next build` copies

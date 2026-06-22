@@ -32,6 +32,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Built Lambda bundles (e.g. the esbuild-minified edge authorizer) — not source.
+    "**/dist/**",
   ]),
 ]);
 

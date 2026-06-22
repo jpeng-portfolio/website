@@ -56,6 +56,12 @@ jobs:
       # enough to produce a representative static export.
       NEXT_PUBLIC_CONTACT_API_URL: https://example.com/contact
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA' }}
+      # The résumé portal fails loud without these; e2e doesn't reach Cognito, so
+      # representative dummies are enough to produce the static export.
+      NEXT_PUBLIC_COGNITO_USER_POOL_ID: us-east-1_e2edummy
+      NEXT_PUBLIC_COGNITO_CLIENT_ID: e2edummyclientid
+      NEXT_PUBLIC_COGNITO_HOSTED_UI_DOMAIN: jp-resume.auth.us-east-1.amazoncognito.com
+      NEXT_PUBLIC_COGNITO_REGION: us-east-1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -115,3 +121,21 @@ jobs:
         with:
           workspaces: infrastructure/lambdas/contact
       - run: cargo test --locked
+
+  edge-authorizer:
+    # Unit: Lambda@Edge Cognito authorizer (allow / redirect / fail-loud config).
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure/lambdas/edge-authorizer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: infrastructure/lambdas/edge-authorizer/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build # ensure the bundle compiles (Pulumi packages it)
