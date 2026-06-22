@@ -43,6 +43,12 @@ export function HeroSection() {
             >
               View Projects
             </a>
+            <a
+              href="/resume"
+              className="inline-flex h-8 items-center rounded-lg border border-[#0F172A] bg-transparent px-3 text-sm font-medium text-[#0F172A] transition hover:bg-[#ece6dc]"
+            >
+              Résumé
+            </a>
           </div>
         </div>
         <Tilt rotationFactor={8} className="mx-auto">
