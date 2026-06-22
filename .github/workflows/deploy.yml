@@ -54,6 +54,7 @@ jobs:
           test -n "${{ secrets.AWS_ROLE_ARN }}" || { echo "::error::AWS_ROLE_ARN secret is required"; exit 1; }
           test -n "${{ secrets.PULUMI_ACCESS_TOKEN }}" || { echo "::error::PULUMI_ACCESS_TOKEN secret is required"; exit 1; }
           test -n "${NEXT_PUBLIC_TURNSTILE_SITE_KEY}" || { echo "::error::NEXT_PUBLIC_TURNSTILE_SITE_KEY variable is required"; exit 1; }
+          test -n "${{ secrets.RESUME_CONTACT_JSON }}" || { echo "::error::RESUME_CONTACT_JSON secret is required (résumé contact header)"; exit 1; }
 
       - uses: actions/setup-node@v4
         with:
@@ -99,10 +100,20 @@ jobs:
           test -n "$URL" || { echo "::error::contactApiUrl output is empty"; exit 1; }
           echo "NEXT_PUBLIC_CONTACT_API_URL=$URL" >> "$GITHUB_ENV"
 
-      # Build the static export against the real contact API URL.
+      # Regenerate the résumé documents from site content, then build the static
+      # export against the real contact API URL. `next build` copies
+      # public/resume/files/* into out/resume/files/*, which the publish phase
+      # ships. The contact header comes from the RESUME_CONTACT_JSON secret;
+      # generation failure (incl. a missing/invalid secret) fails the deploy.
       - name: Build site
+        env:
+          RESUME_CONTACT_JSON: ${{ secrets.RESUME_CONTACT_JSON }}
         run: |
           npm ci
+          npx playwright install --with-deps chromium
+          npm run resume:build
+          test -s public/resume/files/jason-paquette-resume.pdf || { echo "::error::résumé PDF missing or empty"; exit 1; }
+          test -s public/resume/files/jason-paquette-resume.docx || { echo "::error::résumé DOCX missing or empty"; exit 1; }
           npm run build
 
       # Phase 2: upload out/ to the site bucket and invalidate CloudFront.

@@ -47,7 +47,8 @@ jobs:
       - run: npm run test:unit
 
   e2e:
-    # Integration: build the static export and drive it headlessly, fully offline.
+    # Integration: regenerate the résumé from site content, build the static
+    # export, and drive it headlessly, fully offline.
     runs-on: ubuntu-latest
     env:
       # The build needs the public env at compile time. E2E doesn't touch the
@@ -63,8 +64,35 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm run build
       - run: npx playwright install --with-deps chromium
+
+      # Regenerate the résumé documents from site content BEFORE next build, so
+      # `out/resume/files/*` is published from the export. The contact header is
+      # secret-sourced; PRs without the secret fall back to clearly-fake preview
+      # details (the documents themselves never ship to prod from a PR).
+      - name: Generate résumé documents (assert non-empty + deterministic)
+        env:
+          RESUME_CONTACT_JSON: ${{ secrets.RESUME_CONTACT_JSON || '{"fullName":"Resume Preview","email":"preview@example.com","phone":"+1 555 000 0000","location":"Remote"}' }}
+        run: |
+          PDF=public/resume/files/jason-paquette-resume.pdf
+          DOCX=public/resume/files/jason-paquette-resume.docx
+
+          npm run resume:build
+          test -s "$PDF" || { echo "::error::résumé PDF missing or empty"; exit 1; }
+          test -s "$DOCX" || { echo "::error::résumé DOCX missing or empty"; exit 1; }
+          head -c 5 "$PDF" | grep -q '%PDF-' || { echo "::error::résumé PDF is not a valid PDF"; exit 1; }
+
+          # Determinism: a rerun must be byte-identical (PDF) and content-identical
+          # (DOCX body — docProps timestamps are package metadata, not content).
+          PDF_1="$(sha256sum "$PDF" | awk '{print $1}')"
+          BODY_1="$(unzip -p "$DOCX" word/document.xml | sha256sum | awk '{print $1}')"
+          npm run resume:build
+          PDF_2="$(sha256sum "$PDF" | awk '{print $1}')"
+          BODY_2="$(unzip -p "$DOCX" word/document.xml | sha256sum | awk '{print $1}')"
+          [ "$PDF_1" = "$PDF_2" ] || { echo "::error::résumé PDF generation is not deterministic"; exit 1; }
+          [ "$BODY_1" = "$BODY_2" ] || { echo "::error::résumé DOCX content is not deterministic"; exit 1; }
+
+      - run: npm run build
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
