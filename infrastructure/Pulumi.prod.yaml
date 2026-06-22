@@ -33,6 +33,10 @@ config:
   # DNS record TTL (seconds). Keep low around a cutover for fast propagation.
 
   jpeng-portfolio-infra:dnsTtl: "300"
+  # Cognito Hosted UI subdomain prefix for owner-gated résumé downloads
+  # (-> <prefix>.auth.us-east-1.amazoncognito.com). Must be globally unique.
+
+  jpeng-portfolio-infra:cognitoDomainPrefix: jpcloudengineering-auth
   # Whether `pulumi up` also uploads the built `out/` and invalidates CloudFront.
 
   # PR previews set this to false (infra-only diff); the deploy publish pass sets true.

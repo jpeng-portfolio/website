@@ -65,8 +65,18 @@ export interface StaticSite {
   distributionDomain: pulumi.Output<string>;
 }
 
+export interface StaticSiteArgs {
+  /**
+   * Published Lambda@Edge version ARN that gates `/resume/files/*` as a
+   * viewer-request authorizer (owner-only résumé downloads). Added as an ordered
+   * cache behavior — an in-place update to the existing distribution.
+   */
+  resumeAuthorizerVersionArn: pulumi.Input<string>;
+}
+
 export function createStaticSite(
   cloudflareProvider: cloudflare.Provider,
+  args: StaticSiteArgs,
 ): StaticSite {
   // --- Private origin bucket -------------------------------------------------
   // Dot-free bucket name: a dotted name (e.g. the domain) breaks CloudFront's
@@ -172,6 +182,31 @@ export function createStaticSite(
         { eventType: "viewer-request", functionArn: rewriteFn.arn },
       ],
     },
+    // Owner-gated résumé files. A single behavior may have only ONE
+    // viewer-request handler, so this one uses the Lambda@Edge authorizer
+    // instead of the URI-rewrite CloudFront Function — which is also correct,
+    // since these objects have real keys (.pdf/.docx) and the cognito-at-edge
+    // `_callback` path must NOT be rewritten to index.html.
+    orderedCacheBehaviors: [
+      {
+        pathPattern: "/resume/files/*",
+        targetOriginId: originId,
+        viewerProtocolPolicy: "redirect-to-https",
+        allowedMethods: ["GET", "HEAD", "OPTIONS"],
+        cachedMethods: ["GET", "HEAD"],
+        compress: true,
+        // Managed "CachingOptimized" — viewer-request Lambda@Edge runs before
+        // the cache lookup, so auth is always enforced even on a cache hit.
+        cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
+        lambdaFunctionAssociations: [
+          {
+            eventType: "viewer-request",
+            lambdaArn: args.resumeAuthorizerVersionArn,
+            includeBody: false,
+          },
+        ],
+      },
+    ],
     customErrorResponses: [
       {
         errorCode: 403,

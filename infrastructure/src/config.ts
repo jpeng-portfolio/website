@@ -47,6 +47,26 @@ export const config = {
   /** DNS record TTL in seconds. Keep low around a cutover. */
   dnsTtl: cfg.getNumber("dnsTtl") ?? 300,
 
+  // --- Owner-gated résumé downloads (M1 auth) --------------------------------
+  /**
+   * Cognito Hosted UI domain prefix (the `<prefix>.auth.<region>.amazoncognito.com`
+   * subdomain). Must be globally unique within the region.
+   */
+  cognitoDomainPrefix: cfg.require("cognitoDomainPrefix"),
+
+  /**
+   * Email/username of the single résumé owner provisioned in the user pool.
+   * Secret — it's personal data and this repo is public, so it's seeded
+   * out-of-band (never committed), like the other secrets.
+   */
+  resumeOwnerEmail: cfg.requireSecret("resumeOwnerEmail"),
+
+  /**
+   * Initial (temporary) password for the owner user — secret. Cognito forces a
+   * change on first sign-in. Fail-loud if unset.
+   */
+  resumeOwnerTempPassword: cfg.requireSecret("resumeOwnerTempPassword"),
+
   /**
    * When true, `pulumi up` also syncs the built `out/` to the site bucket and
    * invalidates CloudFront. PR previews set this false for an infra-only diff.
@@ -66,6 +86,21 @@ export const SITE_BUILD_DIR = "../out";
  * preview/up.
  */
 export const LAMBDA_ZIP_PATH = "lambdas/contact/bootstrap.zip";
+
+/**
+ * Path to the bundled Lambda@Edge authorizer entry (esbuild output). CI runs
+ * `npm ci && npm run build` in `lambdas/edge-authorizer` before every
+ * preview/up; the Pulumi program zips this together with a generated
+ * `config.json`. Fail-loud if missing.
+ */
+export const EDGE_AUTHORIZER_DIST = "lambdas/edge-authorizer/dist/index.js";
+
+/**
+ * Single OAuth callback path handled by the edge authorizer (cognito-at-edge
+ * `parseAuthPath`). Lives under the gated `/resume/files/*` behavior so the same
+ * edge function intercepts it. Kept in sync with the Cognito client callback URL.
+ */
+export const RESUME_PARSE_AUTH_PATH = "resume/files/_callback";
 
 export const commonTags: Record<string, string> = {
   project: "jpeng-portfolio",
