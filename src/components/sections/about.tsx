@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { SocialLinks } from "@/components/shared/social-links";
+import { aboutParagraphs } from "@/lib/resume-data";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -43,28 +44,9 @@ export function AboutSection() {
             variants={fadeInUp}
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <p>
-              I&apos;m an AWS cloud and infrastructure engineer with 5 years
-              designing, deploying, and managing production environments. I
-              provision multi-account AWS infrastructure as code with Terraform —
-              VPCs, EC2, IAM, Lambda, and security groups — and have run a SOC
-              2-compliant environment of 30+ servers on a $200K–$250K annual cloud
-              budget.
-            </p>
-            <p>
-              Day to day I build and maintain CI/CD pipelines (GitLab CI/CD and
-              GitHub Actions), architect disaster-recovery and site-to-site VPN
-              topologies, and monitor fleets with CloudWatch and DattoRMM — across
-              both AWS and Microsoft 365 / Active Directory environments. I started
-              on the frontline support desk and grew into owning cloud
-              infrastructure end-to-end.
-            </p>
-            <p>
-              I also build full-stack serverless applications on AWS — Next.js and
-              TypeScript frontends wired to Lambda-backed APIs with SST — when a
-              project calls for it, so I can take a system from infrastructure all
-              the way to a shipped product.
-            </p>
+            {aboutParagraphs.map((paragraph) => (
+              <p key={paragraph.slice(0, 32)}>{paragraph}</p>
+            ))}
           </motion.div>
         </motion.div>
       </div>

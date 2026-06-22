@@ -4,12 +4,7 @@ import { motion } from "motion/react";
 import { BadgeCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SectionHeading } from "@/components/shared/section-heading";
-
-const certifications = [
-  { name: "AWS Certified Solutions Architect – Associate", date: "March 2024" },
-  { name: "eLearnSecurity Junior Penetration Tester (eJPT)", date: "July 2023" },
-  { name: "CompTIA A+", date: "April 2021" },
-];
+import { resumeCertifications, resumeEducation } from "@/lib/resume-data";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -32,7 +27,7 @@ export function CertificationsSection() {
           viewport={{ once: true, margin: "-80px" }}
           transition={{ staggerChildren: 0.1 }}
         >
-          {certifications.map((cert) => (
+          {resumeCertifications.map((cert) => (
             <motion.div
               key={cert.name}
               variants={cardVariants}
@@ -51,24 +46,25 @@ export function CertificationsSection() {
               </Card>
             </motion.div>
           ))}
-          <motion.div
-            variants={cardVariants}
-            transition={{ duration: 0.45, ease: "easeOut" }}
-          >
-            <Card className="border-border/90 bg-card h-full">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  Bunker Hill Community College
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1 text-sm text-[#475569]">
-                <p>Associate in Science, Computer Science Transfer</p>
-                <p className="technical-text text-xs uppercase tracking-[0.12em]">
-                  May 2025
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
+          {resumeEducation.map((edu) => (
+            <motion.div
+              key={edu.institution}
+              variants={cardVariants}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+            >
+              <Card className="border-border/90 bg-card h-full">
+                <CardHeader>
+                  <CardTitle className="text-base">{edu.institution}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm text-[#475569]">
+                  <p>{edu.credential}</p>
+                  <p className="technical-text text-xs uppercase tracking-[0.12em]">
+                    {edu.date}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </motion.div>
       </div>
     </section>
