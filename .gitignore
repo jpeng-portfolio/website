@@ -20,6 +20,9 @@
 # production
 /build
 
+# generated résumé documents (build artifact, never committed)
+/dist
+
 # misc
 .DS_Store
 *.pem

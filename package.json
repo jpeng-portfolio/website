@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "resume:build": "tsx scripts/resume/build.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
@@ -37,10 +38,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^4.3.4",
+    "docx": "^9.7.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "serve": "^14.2.4",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.0"

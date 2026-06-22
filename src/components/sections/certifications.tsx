@@ -4,12 +4,9 @@ import { motion } from "motion/react";
 import { BadgeCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SectionHeading } from "@/components/shared/section-heading";
+import { resumeData } from "@/lib/resume-data";
 
-const certifications = [
-  { name: "AWS Certified Solutions Architect – Associate", date: "March 2024" },
-  { name: "eLearnSecurity Junior Penetration Tester (eJPT)", date: "July 2023" },
-  { name: "CompTIA A+", date: "April 2021" },
-];
+const { certifications, education } = resumeData;
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -51,24 +48,25 @@ export function CertificationsSection() {
               </Card>
             </motion.div>
           ))}
-          <motion.div
-            variants={cardVariants}
-            transition={{ duration: 0.45, ease: "easeOut" }}
-          >
-            <Card className="border-border/90 bg-card h-full">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  Bunker Hill Community College
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1 text-sm text-[#475569]">
-                <p>Associate in Science, Computer Science Transfer</p>
-                <p className="technical-text text-xs uppercase tracking-[0.12em]">
-                  May 2025
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
+          {education.map((entry) => (
+            <motion.div
+              key={entry.school}
+              variants={cardVariants}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+            >
+              <Card className="border-border/90 bg-card h-full">
+                <CardHeader>
+                  <CardTitle className="text-base">{entry.school}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm text-[#475569]">
+                  <p>{entry.credential}</p>
+                  <p className="technical-text text-xs uppercase tracking-[0.12em]">
+                    {entry.date}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </motion.div>
       </div>
     </section>

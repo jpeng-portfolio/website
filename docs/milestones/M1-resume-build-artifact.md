@@ -58,14 +58,17 @@ submit with applications. No public download, no sign-in, no auth infrastructure
   timestamps in content) so reruns are idempotent.
 
 ### CI pipeline
-- Add a **résumé job/step** that installs Playwright Chromium, injects the `RESUME_CONTACT_JSON` secret,
-  runs `npm run resume:build`, and uploads the output via **`actions/upload-artifact`**. A generation
-  failure **fails the build** (fail-loud).
+- A single **`resume` job in `_gates.yml`** installs Playwright Chromium, resolves the contact block
+  (real `RESUME_CONTACT_JSON` secret when available, else a placeholder so fork PRs stay green), runs
+  `npm run resume:build`, asserts both files are valid + non-empty, and uploads them via
+  **`actions/upload-artifact`** (name `resume`). Because both `pr.yml` and `deploy.yml` call `_gates.yml`
+  with `secrets: inherit`, this one job covers **both** PR and deploy: a PR always proves the documents
+  generate, and a merge to `master` produces a fresh artifact built with the **real** contact secret.
+  One job means no duplicate-artifact collision.
+- **Doc-generation failure fails CI** (fail-loud), but a *missing* secret falls back to the placeholder,
+  so the production deploy is never blocked on the secret being configured.
 - The artifact is downloadable from the workflow run by the owner. **No publish to S3, no change to the
   Pulumi program or the deployed site.**
-- Whether this runs on PR (`_gates.yml`), on deploy (`deploy.yml`), or both is a small CI decision —
-  default: build it in the gates so a PR always proves the documents still generate, and also on deploy
-  so `master` always has a fresh downloadable artifact.
 
 ### Infra
 - **None.** No Pulumi changes. The static-site distribution, buckets, and behaviors are untouched.
@@ -96,10 +99,13 @@ submit with applications. No public download, no sign-in, no auth infrastructure
   git-ignored `dist/resume/`; deterministic/idempotent. *(Integration step — lands after 1.2.1/1.2.2.)*
 
 ### M1.3 — CI builds & uploads the artifact  *(Depends on: M1.2)*
-- **M1.3.1** (M) — Add a résumé step to CI (install Chromium, inject `RESUME_CONTACT_JSON` secret, run
-  `resume:build`) and upload `dist/resume/*` via `actions/upload-artifact`. Doc-gen failure fails the
-  build.
-- **M1.3.2** (S) — CI assertion that both files are produced and non-empty; generation is deterministic.
+- **M1.3.1** (M) — Add a `resume` job to `_gates.yml` (install Chromium, resolve `RESUME_CONTACT_JSON`
+  secret with a placeholder fallback, run `resume:build`) and upload `dist/resume/*` via
+  `actions/upload-artifact`. Shared by PR + deploy via the called-workflow pattern. Doc-gen failure fails
+  the build.
+- **M1.3.2** (S) — CI assertion that both files are produced, non-empty, and have valid PDF/DOCX magic
+  bytes. (Content is deterministic by construction — stable ordering, no timestamps in the document body;
+  DOCX bytes are not asserted identical because the `docx` library embeds non-deterministic internal ids.)
 
 ## Definition of Done (per phase)
 - **M1.1** — All résumé content lives in `src/lib`; `about.tsx`/`certifications.tsx` render from it; private
@@ -118,8 +124,18 @@ submit with applications. No public download, no sign-in, no auth infrastructure
   owner to download and submit manually. Re-running CI regenerates a fresh artifact.
 
 ## Status / Next steps / Gotchas
-- **Status:** spec re-scoped from owner-gated downloads to a CI build artifact (auth dropped). No code,
-  no GitHub objects created yet.
-- **Next step:** on approval, create the M1 milestone + epic + phase issues, then pick up **M1.1**.
-- **Gotcha:** keep résumé generation deterministic (no timestamps in document content) so CI reruns don't
-  produce spurious diffs; and keep the rendered site free of any contact detail the privacy rule forbids.
+- **Status:** ✅ **Implemented** (M1.1–M1.3) on branch `claude/eager-goodall-57y77d`.
+  - M1.1 — `src/lib/resume-data.ts`, `resume-contact.ts` (fail-loud + eslint guard + isolation test),
+    `resume-model.ts`; `about.tsx`/`certifications.tsx` refactored to consume the data (verified: static
+    export renders identical content).
+  - M1.2 — `resume-html.ts` (PDF template) + `resume-docx.ts` (pure block builder + `docx` document);
+    `scripts/resume/{render-pdf,render-docx,build}.ts`; `npm run resume:build` → `dist/resume/`. Verified
+    locally: valid 2-page **text-selectable** PDF (84 text blocks / 305 show-text ops / 0 images / 2
+    ToUnicode CMaps) + valid DOCX; fail-loud confirmed on missing secret.
+  - M1.3 — `resume` job in `_gates.yml` (Chromium install, secret-or-placeholder, build, validity
+    assertions, `upload-artifact`). PDF smoke test in `tests/e2e/resume-pdf.spec.ts`.
+  - Gates green locally: lint (0 errors), typecheck, 62 unit tests.
+- **Next step:** set the **`RESUME_CONTACT_JSON`** GitHub Actions secret (object with `fullName`, `email`,
+  `phone`, `location`) so deploy builds embed real contact details; open a PR when ready.
+- **Gotcha:** résumé content is kept deterministic (no timestamps in the document body); the private
+  contact accessor is import-guarded out of all rendered UI so no contact detail can leak to the page.
