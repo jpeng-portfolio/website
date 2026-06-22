@@ -72,6 +72,9 @@ submit with applications. No public download, no sign-in, no auth infrastructure
 
 ### Infra
 - **None.** No Pulumi changes. The static-site distribution, buckets, and behaviors are untouched.
+- **No preview-environment interaction.** The earlier auth-based design needed its Cognito/Lambda@Edge
+  resources gated off the per-PR preview stacks; this build-artifact approach adds no infra and serves
+  nothing from the site, so per-PR preview deploys and `teardown.yml` are entirely unaffected.
 
 ### Where tests land
 - `resume-model.ts` transform + skill-group mapping/formatting → **Vitest unit tests**.

@@ -35,6 +35,19 @@ export interface ContactApi {
 export function createContactApi(
   cloudflareProvider: cloudflare.Provider,
 ): ContactApi {
+  // The contact API is apex-shared (SES domain identity + DKIM live on the apex
+  // domain), so it only ships on stacks that own the apex. Fail loud if the
+  // addresses it needs are unset rather than deploying a misconfigured API.
+  const senderEmail = config.senderEmail;
+  const contactEmail = config.contactEmail;
+  if (!senderEmail || !contactEmail) {
+    throw new Error(
+      "senderEmail and contactEmail are required when deployContactApi is true. " +
+        "Set them with `pulumi config set jpeng-portfolio-infra:senderEmail …` " +
+        "(and contactEmail), or set deployContactApi=false for a preview stack.",
+    );
+  }
+
   // Lambda/bucket names can't contain dots — derive a DNS-safe slug.
   const slug = config.domainName.replace(/\./g, "-");
 
@@ -177,8 +190,8 @@ export function createContactApi(
   }
 
   const lambdaEnv: Record<string, pulumi.Input<string>> = {
-    SENDER_EMAIL: config.senderEmail,
-    CONTACT_EMAIL: config.contactEmail,
+    SENDER_EMAIL: senderEmail,
+    CONTACT_EMAIL: contactEmail,
     ALLOWED_ORIGIN: pulumi.interpolate`https://${config.domainName}`,
     TEMPLATE_BUCKET: templatesBucket.bucket,
   };

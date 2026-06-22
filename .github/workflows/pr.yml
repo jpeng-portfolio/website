@@ -1,6 +1,13 @@
-# PR gate workflow: every PR against the default branch runs the full quality
-# gates AND `pulumi preview` to surface the infra diff. No pulumi up, no prod
-# change. Superseded PR runs are cancelled.
+# PR workflow. Every PR against the default branch:
+#   1. runs the full quality gates (lint → typecheck → unit → integration),
+#   2. deploys a disposable per-PR preview environment to
+#      `pr-<number>.jpcloudengineering.com` (its own S3 + CloudFront + ACM cert +
+#      DNS, in a `pr-<number>` Pulumi stack), surfacing the URL in the run
+#      summary, and
+#   3. posts the production infra diff (`pulumi preview`) as a PR comment so a
+#      reviewer sees what merging would change in prod.
+#
+# The preview stack is torn down by teardown.yml when the PR closes.
 name: PR
 
 on:
@@ -8,6 +15,8 @@ on:
     branches: [master, main]
     types: [opened, synchronize, reopened]
 
+# One run per PR. Superseded runs cancel — preview stacks are disposable, and a
+# `pulumi cancel` before each up clears any lock a cancelled run left behind.
 concurrency:
   group: pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -21,7 +30,122 @@ jobs:
     secrets: inherit
 
   preview:
-    name: pulumi preview
+    name: deploy preview environment
+    needs: gates
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC -> AWS
+    env:
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      PULUMI_ORG_PROJECT: jpaquette2323-gmail-com/jpeng-portfolio-infra
+      AWS_REGION: us-east-1
+      # Non-secret stack config, kept in sync with infrastructure/Pulumi.prod.yaml.
+      DOMAIN_NAME: jpcloudengineering.com
+      CLOUDFLARE_ZONE_ID: b80f22942623d4cfb51a3ad401cecab8
+      # Read by infra/src/dns.ts via the Cloudflare provider. PR stacks can't
+      # reuse prod's encrypted secret, so the token is supplied per run.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      # Preview builds render the contact form (client validation works) but do
+      # NOT wire submission — the apex contact API's CORS is locked to the apex
+      # origin. A dummy URL keeps the build fail-loud rule satisfied, same as the
+      # e2e gate. The widget uses the real (or Cloudflare test) Turnstile key.
+      NEXT_PUBLIC_CONTACT_API_URL: https://example.com/contact
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail fast on missing required secrets
+        run: |
+          test -n "${{ secrets.AWS_ROLE_ARN }}" || { echo "::error::AWS_ROLE_ARN secret is required"; exit 1; }
+          test -n "${{ secrets.PULUMI_ACCESS_TOKEN }}" || { echo "::error::PULUMI_ACCESS_TOKEN secret is required"; exit 1; }
+          test -n "${CLOUDFLARE_API_TOKEN}" || { echo "::error::CLOUDFLARE_API_TOKEN secret is required for PR preview stacks"; exit 1; }
+
+      - name: Resolve preview stage
+        id: stage
+        run: |
+          n="${{ github.event.pull_request.number }}"
+          echo "stack=pr-${n}" >> "$GITHUB_OUTPUT"
+          echo "host=pr-${n}.${DOMAIN_NAME}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # Build the static export for the preview host. No contact API is deployed
+      # for previews, so no Rust/Lambda build is needed here.
+      - name: Build site
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v6
+
+      - name: Install infra deps
+        run: npm ci || npm install
+        working-directory: infrastructure
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      # Ephemeral pr-<N> stacks aren't committed, so their config (Pulumi.pr-<N>.yaml)
+      # is re-derived every run. State persists in Pulumi Cloud; config does not.
+      - name: Configure preview stack
+        working-directory: infrastructure
+        run: |
+          stack="${PULUMI_ORG_PROJECT}/${{ steps.stage.outputs.stack }}"
+          pulumi stack select --create "$stack"
+          pulumi config set aws:region us-east-1
+          pulumi config set jpeng-portfolio-infra:domainName "$DOMAIN_NAME"
+          pulumi config set jpeng-portfolio-infra:cloudflareZoneId "$CLOUDFLARE_ZONE_ID"
+          pulumi config set jpeng-portfolio-infra:siteHost "${{ steps.stage.outputs.host }}"
+          pulumi config set jpeng-portfolio-infra:deployContactApi false
+          pulumi config set jpeng-portfolio-infra:publishContent true
+          pulumi config set jpeng-portfolio-infra:dnsTtl 300
+          pulumi config set --secret jpeng-portfolio-infra:cloudflareApiToken "$CLOUDFLARE_API_TOKEN"
+
+      # Clear any lock left by a cancelled superseded run before deploying.
+      - name: Pulumi cancel (clear stale lock)
+        working-directory: infrastructure
+        continue-on-error: true
+        run: pulumi cancel --yes --stack "${PULUMI_ORG_PROJECT}/${{ steps.stage.outputs.stack }}"
+
+      # First deploy of a new PR issues an ACM cert + CloudFront distribution
+      # (a few minutes to validate + propagate); subsequent pushes just resync
+      # content and invalidate.
+      - name: Pulumi up (deploy preview)
+        working-directory: infrastructure
+        run: pulumi up --yes --skip-preview --stack "${PULUMI_ORG_PROJECT}/${{ steps.stage.outputs.stack }}"
+
+      - name: Surface preview URL
+        if: success()
+        working-directory: infrastructure
+        run: |
+          url="$(pulumi stack output siteUrl --stack "${PULUMI_ORG_PROJECT}/${{ steps.stage.outputs.stack }}")"
+
+          # Plain log + run-page banner (mobile-friendly) + job summary.
+          echo "Preview environment: ${url}"
+          echo "::notice title=Preview ${{ steps.stage.outputs.stack }}::${url}"
+          {
+            echo "## 🚀 Preview environment — \`${{ steps.stage.outputs.stack }}\`"
+            echo ""
+            echo "| | |"
+            echo "| --- | --- |"
+            echo "| **URL** | ${url} |"
+            echo "| **Stack** | \`${{ steps.stage.outputs.stack }}\` |"
+            echo ""
+            echo "_Torn down automatically when this PR closes._"
+            echo "_The contact form renders for review but submission is not wired on previews._"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  infra-diff:
+    name: pulumi preview (prod infra diff)
     needs: gates
     runs-on: ubuntu-latest
     permissions:
