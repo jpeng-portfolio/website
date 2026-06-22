@@ -106,8 +106,11 @@ export function createStaticSite(
   });
 
   // --- Origin Access Control -------------------------------------------------
+  // Name from the full host (not the slug) so prod keeps its existing
+  // `<apex>-oac` name (no churn) while each preview stays unique. OAC names
+  // allow dots, so the host form is fine here (unlike the S3 bucket name).
   const oac = new aws.cloudfront.OriginAccessControl("site-oac", {
-    name: `${slug}-oac`,
+    name: `${host}-oac`,
     originAccessControlOriginType: "s3",
     signingBehavior: "always",
     signingProtocol: "sigv4",
