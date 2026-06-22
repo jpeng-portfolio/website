@@ -1,0 +1,22 @@
+{
+  "name": "edge-authorizer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CloudFront Lambda@Edge viewer-request authorizer (cognito-at-edge) gating /resume/files/*.",
+  "type": "commonjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cognito-at-edge": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^20",
+    "esbuild": "^0.24.0",
+    "typescript": "^5",
+    "vitest": "^3.0.0"
+  }
+}
