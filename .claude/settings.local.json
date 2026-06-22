@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "mcp__Pulumi__*",
       "Read(//c/Users/jasonp/OneDrive - Beginner IT Guides/Documents/Career/Portfolio/Resumes/**)",
       "Bash(powershell -Command ' *)",
       "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless=new --disable-gpu --hide-scrollbars --window-size=1280,1100 --virtual-time-budget=30000 --run-all-compositor-stages-before-draw --screenshot=D:/Repositories/jpeng-portfolio/website/_about2.png 'http://localhost:8099/#about')",
