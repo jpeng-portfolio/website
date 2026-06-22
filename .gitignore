@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# generated résumé documents (regenerated from src content by `npm run resume:build`)
+/public/resume/files/
+
 # production
 /build
 
