@@ -22,8 +22,16 @@ if (region !== "us-east-1") {
 export const config = {
   region,
 
-  /** Apex domain the site is served from, e.g. jpcloudengineering.com. */
+  /** Apex domain that owns the Cloudflare zone, e.g. jpcloudengineering.com. */
   domainName: cfg.require("domainName"),
+
+  /**
+   * Host the site is actually served from. Defaults to the apex `domainName`
+   * (the production stack). PR preview stacks override it with
+   * `pr-<N>.<domainName>` so each preview gets its own bucket, CloudFront
+   * distribution, ACM cert and DNS record under the same Cloudflare zone.
+   */
+  siteHost: cfg.get("siteHost") ?? cfg.require("domainName"),
 
   /** Cloudflare zone id that owns the domain's DNS. */
   cloudflareZoneId: cfg.require("cloudflareZoneId"),
@@ -31,11 +39,25 @@ export const config = {
   /** Cloudflare API token with DNS edit rights — secret. */
   cloudflareApiToken: cfg.requireSecret("cloudflareApiToken"),
 
-  /** SES "From" address; must live on the verified domain identity. */
-  senderEmail: cfg.require("senderEmail"),
+  /**
+   * Whether to provision the apex-shared contact API (API Gateway → Lambda →
+   * SES + DKIM DNS). True for the production stack; PR previews set it false so
+   * an ephemeral stack never recreates the shared SES domain identity / DKIM
+   * records (which would clobber production email). See `contact-api.ts`.
+   */
+  deployContactApi: cfg.getBoolean("deployContactApi") ?? true,
 
-  /** Inbox that receives contact-form notifications. */
-  contactEmail: cfg.require("contactEmail"),
+  /**
+   * SES "From" address; must live on the verified domain identity. Required
+   * only when `deployContactApi` is true — asserted in `contact-api.ts`.
+   */
+  senderEmail: cfg.get("senderEmail"),
+
+  /**
+   * Inbox that receives contact-form notifications. Required only when
+   * `deployContactApi` is true — asserted in `contact-api.ts`.
+   */
+  contactEmail: cfg.get("contactEmail"),
 
   /**
    * Cloudflare Turnstile secret key. Optional: when set, the contact Lambda

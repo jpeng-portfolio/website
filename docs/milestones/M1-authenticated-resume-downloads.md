@@ -1,9 +1,19 @@
 # M1 · Owner-gated resume downloads (single-source PDF + DOCX)
 
-> Size: XL · Builds on: the **landed** GitHub Actions + Pulumi foundation — the `Deploy`/`PR` workflows
-> (`.github/workflows/`) and the `infrastructure/` Pulumi program (`dns` / `static-site` / `contact-api`,
-> composed in `index.ts`). M1 **extends** both: a new auth module + a protected CloudFront behavior in the
-> Pulumi program, and a résumé-generation step in the deploy build.
+> Size: XL · Builds on: the **landed** GitHub Actions + Pulumi foundation — the `Deploy`/`PR`/`Teardown`
+> workflows (`.github/workflows/`) and the `infrastructure/` Pulumi program (`dns` / `static-site` /
+> `contact-api`, composed in `index.ts`). M1 **extends** both: a new auth module + a protected CloudFront
+> behavior in the Pulumi program, and a résumé-generation step in the deploy build.
+>
+> **⚠️ Preview-environment interaction (landed after this spec was drafted).** PRs now deploy a disposable
+> per-PR preview stack (`pr-<N>.jpcloudengineering.com`) that runs the **same `static-site.ts` module**,
+> and `teardown.yml` destroys it on close. The contact API is already gated off on previews via
+> `deployContactApi=false`. **M1's résumé-auth resources (Cognito pool + single user, Lambda@Edge) MUST be
+> gated the same way** (a new `deployResumeAuth` config flag, default `true`, set `false` on preview
+> stacks). Reasons: (1) provisioning a per-PR Cognito pool + owner user is nonsensical, and (2) **Lambda@Edge
+> functions replicate to every edge region and are slow to delete** — leaving them un-gated would make
+> preview teardown slow or fail. Previews therefore render the site **without** the gated `/resume/files/*`
+> behavior; the full sign-in→download flow is verified on the production (full) stack.
 
 ## Goal
 Make the website the **single source of truth** for résumé content, have the **pipeline regenerate**
@@ -82,6 +92,12 @@ documents; only Jason — after signing in — can download them.
 Cognito user pool/client/domain + single user; Lambda@Edge function + edge IAM; a new CloudFront cache
 behavior for `/resume/files/*` with the viewer-request association. Region pinned **us-east-1**.
 
+**Gate all of the above behind a `deployResumeAuth` config flag (default `true`)**, mirroring
+`deployContactApi`. Preview stacks (`pr-<N>`) set it `false`, so `static-site.ts` adds the protected
+behavior + edge association **only on the production/full stack**. This keeps preview deploys lightweight
+and — critically — keeps preview **teardown** fast (no per-PR Lambda@Edge replicas to wait on when
+`pulumi destroy` runs).
+
 ### Where tests land
 - `resume-model.ts` transform + skill-group mapping/formatting → **Vitest unit tests**.
 - DOCX builder → structure/snapshot test (expected sections/headings).
@@ -126,7 +142,9 @@ behavior for `/resume/files/*` with the viewer-request association. Region pinne
 
 ### M1.5 — Wire gating into CloudFront  *(Depends on: M1.4)*
 - **M1.5.1** (M) — Pulumi: `/resume/files/*` CloudFront behavior + viewer-request Lambda@Edge
-  association + edge IAM; `pulumi preview` clean.
+  association + edge IAM, **all gated behind `deployResumeAuth` (default true; preview stacks set false)**;
+  `pulumi preview` clean. Confirm a `pr-<N>` preview still deploys (without the gated behavior) **and tears
+  down cleanly** (no lingering Lambda@Edge replicas).
 
 ### M1.6 — Sign-in portal + download UI  *(Depends on: M1.3, M1.5)*
 - **M1.6.1** (M) — `/resume` sign-in portal: Cognito Hosted UI redirect + callback; show download links
@@ -157,7 +175,12 @@ behavior for `/resume/files/*` with the viewer-request association. Region pinne
   Pulumi change must extend that module in place (Lambda@Edge assoc + behavior) so `pulumi preview` shows
   an in-place update, and the deploy's two-phase `pulumi up` still converges cleanly.
 - **Lambda@Edge limits.** No runtime env vars (bake config at deploy), us-east-1 only, code-size caps,
-  and minutes-long propagation on each change — slows the auth phases' iteration.
+  and minutes-long propagation on each change — slows the auth phases' iteration. **Edge replicas are also
+  slow to *delete*** (replicated to every region), which is exactly why the auth resources are gated off
+  on preview stacks (see `deployResumeAuth` above) so preview teardown stays fast.
+- **Preview stacks run the same `static-site.ts`.** Any change to that module (the new gated behavior,
+  edge association) must keep a `pr-<N>` preview deploying and tearing down cleanly with
+  `deployResumeAuth=false`. Test both paths (prod-shaped and preview-shaped) on the M1.5 PR.
 - **Contact details exposure.** Must come from CI secrets / Pulumi config, never committed, since the repo
   may be public. Generator fails loud if the secret is missing.
 - **Single-user provisioning.** Confirm how the one Cognito user's credentials are seeded (IaC-created user

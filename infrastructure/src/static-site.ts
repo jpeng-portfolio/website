@@ -68,12 +68,19 @@ export interface StaticSite {
 export function createStaticSite(
   cloudflareProvider: cloudflare.Provider,
 ): StaticSite {
+  // The host this stack serves: the apex for prod, `pr-<N>.<domain>` for a
+  // preview. All site-scoped resource names derive from its dot-free slug so
+  // each stack owns a disjoint, globally-unique set (S3 bucket names, the
+  // CloudFront Function name, the OAC name) and teardown is a clean destroy.
+  const host = config.siteHost;
+  const slug = host.replace(/\./g, "-");
+
   // --- Private origin bucket -------------------------------------------------
   // Dot-free bucket name: a dotted name (e.g. the domain) breaks CloudFront's
   // HTTPS connection to the S3 origin because the `*.s3.<region>.amazonaws.com`
   // certificate can't match the extra dot levels.
   const bucket = new aws.s3.Bucket("site", {
-    bucket: `${config.domainName.replace(/\./g, "-")}-site`,
+    bucket: `${slug}-site`,
     tags: { ...commonTags, role: "static-site" },
   });
 
@@ -100,7 +107,7 @@ export function createStaticSite(
 
   // --- Origin Access Control -------------------------------------------------
   const oac = new aws.cloudfront.OriginAccessControl("site-oac", {
-    name: pulumi.interpolate`${config.domainName}-oac`,
+    name: `${slug}-oac`,
     originAccessControlOriginType: "s3",
     signingBehavior: "always",
     signingProtocol: "sigv4",
@@ -116,7 +123,7 @@ export function createStaticSite(
 
   // --- ACM certificate (DNS-validated, us-east-1) ----------------------------
   const cert = new aws.acm.Certificate("site-cert", {
-    domainName: config.domainName,
+    domainName: host,
     validationMethod: "DNS",
     tags: { ...commonTags, role: "static-site" },
   });
@@ -150,8 +157,8 @@ export function createStaticSite(
     httpVersion: "http2and3",
     defaultRootObject: "index.html",
     priceClass: "PriceClass_100",
-    aliases: [config.domainName],
-    comment: pulumi.interpolate`${config.domainName} static site`,
+    aliases: [host],
+    comment: `${host} static site`,
     origins: [
       {
         originId,
@@ -219,11 +226,12 @@ export function createStaticSite(
       ),
   });
 
-  // Apex DNS -> CloudFront (DNS-only; CloudFront terminates TLS via the SNI cert).
+  // Site DNS -> CloudFront (DNS-only; CloudFront terminates TLS via the SNI
+  // cert). The apex on prod, `pr-<N>.<domain>` on a preview.
   dnsRecord(
     {
       name: "site-apex",
-      recordName: config.domainName,
+      recordName: host,
       type: "CNAME",
       content: distribution.domainName,
       proxied: false,

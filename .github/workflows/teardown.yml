@@ -1,0 +1,121 @@
+# Teardown the per-PR preview environment when its PR closes (merged or not).
+#
+# Mirrors the preview deploy in pr.yml: re-derive the ephemeral pr-<number>
+# stack config (it isn't committed), `pulumi destroy` every resource it owns
+# (S3, CloudFront, ACM cert, and the Cloudflare DNS records), then remove the
+# now-empty stack from Pulumi Cloud.
+name: Teardown PR preview
+
+on:
+  pull_request:
+    types: [closed]
+
+# Never cancel a teardown — a half-destroyed stack leaves orphaned AWS/DNS
+# resources that nothing else removes.
+concurrency:
+  group: teardown-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  teardown:
+    name: destroy preview environment
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write # OIDC -> AWS
+    env:
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      PULUMI_ORG_PROJECT: jpaquette2323-gmail-com/jpeng-portfolio-infra
+      AWS_REGION: us-east-1
+      DOMAIN_NAME: jpcloudengineering.com
+      CLOUDFLARE_ZONE_ID: b80f22942623d4cfb51a3ad401cecab8
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail fast on missing required secrets
+        run: |
+          test -n "${{ secrets.AWS_ROLE_ARN }}" || { echo "::error::AWS_ROLE_ARN secret is required"; exit 1; }
+          test -n "${{ secrets.PULUMI_ACCESS_TOKEN }}" || { echo "::error::PULUMI_ACCESS_TOKEN secret is required"; exit 1; }
+          test -n "${CLOUDFLARE_API_TOKEN}" || { echo "::error::CLOUDFLARE_API_TOKEN secret is required to destroy the preview stack"; exit 1; }
+
+      - name: Resolve preview stage
+        id: stage
+        run: |
+          n="${{ github.event.pull_request.number }}"
+          echo "stack=pr-${n}" >> "$GITHUB_OUTPUT"
+          echo "host=pr-${n}.${DOMAIN_NAME}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: infrastructure/package-lock.json
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v6
+
+      - name: Install infra deps
+        run: npm ci || npm install
+        working-directory: infrastructure
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      # Select the stack; if it never existed (e.g. PR never deployed a preview),
+      # there's nothing to tear down.
+      - name: Select preview stack
+        id: select
+        working-directory: infrastructure
+        run: |
+          stack="${PULUMI_ORG_PROJECT}/${{ steps.stage.outputs.stack }}"
+          if pulumi stack select "$stack" 2>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No \`${{ steps.stage.outputs.stack }}\` stack — nothing to tear down." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # Re-derive config so the program evaluates and the Cloudflare provider can
+      # remove DNS records. publishContent=false avoids reading a missing out/.
+      - name: Configure stack for destroy
+        if: steps.select.outputs.exists == 'true'
+        working-directory: infrastructure
+        run: |
+          pulumi config set aws:region us-east-1
+          pulumi config set jpeng-portfolio-infra:domainName "$DOMAIN_NAME"
+          pulumi config set jpeng-portfolio-infra:cloudflareZoneId "$CLOUDFLARE_ZONE_ID"
+          pulumi config set jpeng-portfolio-infra:siteHost "${{ steps.stage.outputs.host }}"
+          pulumi config set jpeng-portfolio-infra:deployContactApi false
+          pulumi config set jpeng-portfolio-infra:publishContent false
+          pulumi config set --secret jpeng-portfolio-infra:cloudflareApiToken "$CLOUDFLARE_API_TOKEN"
+
+      - name: Pulumi cancel (clear stale lock)
+        if: steps.select.outputs.exists == 'true'
+        working-directory: infrastructure
+        continue-on-error: true
+        run: pulumi cancel --yes
+
+      - name: Pulumi destroy (remove preview)
+        if: steps.select.outputs.exists == 'true'
+        working-directory: infrastructure
+        run: pulumi destroy --yes --skip-preview
+
+      - name: Remove empty stack
+        if: steps.select.outputs.exists == 'true'
+        working-directory: infrastructure
+        run: pulumi stack rm --yes "${PULUMI_ORG_PROJECT}/${{ steps.stage.outputs.stack }}"
+
+      - name: Teardown summary
+        if: ${{ success() && steps.select.outputs.exists == 'true' }}
+        run: |
+          echo "## 🧹 Preview torn down — \`${{ steps.stage.outputs.stack }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Removed \`${{ steps.stage.outputs.host }}\` and its CloudFront / S3 / ACM / DNS resources." >> "$GITHUB_STEP_SUMMARY"
