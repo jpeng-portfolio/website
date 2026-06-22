@@ -166,7 +166,21 @@ behavior for `/resume/files/*` with the viewer-request association. Region pinne
   validate during M1.2.
 
 ## Status / Next steps / Gotchas
-- **Status:** spec drafted, awaiting review. No code, no GitHub objects created yet.
-- **Next step:** on approval, create the M1 milestone + epic + phase issues, then pick up **M1.1**.
+- **Status:** **all phases implemented** on `claude/gracious-galileo-qxblk6` (PR #11). Résumé track
+  (M1.1–M1.3): single-source content, deterministic PDF/DOCX generation, CI regeneration. Auth track
+  (M1.4–M1.5): Cognito single-owner pool + Hosted UI + Lambda@Edge authorizer + `/resume/files/*` gating.
+  Convergence (M1.6–M1.7): `/resume` portal + gated download links + e2e + docs. CI is green
+  (gates + edge-authorizer tests + a clean in-place `pulumi preview`).
+- **Deploy prerequisites (seed once before the production deploy, fail-loud if unset):**
+  - `pulumi config set --secret jpeng-portfolio-infra:resumeOwnerEmail <owner email>`
+  - `pulumi config set --secret jpeng-portfolio-infra:resumeOwnerTempPassword <temp password>`
+  - `RESUME_CONTACT_JSON` GitHub Actions secret (résumé contact header JSON).
+  - `cognitoDomainPrefix` is committed in `Pulumi.prod.yaml` (change if the subdomain is taken).
+- **Next step:** merge to `master` → the Deploy workflow provisions Cognito + the edge authorizer and
+  publishes the gated files in the same run. Then run the **live** M1.7.1 verification (the auth flow can
+  only be checked against the deployed distribution): sign in at `/resume` → download both; an
+  unauthenticated `GET /resume/files/*` redirects to the Hosted UI. Lambda@Edge propagation takes a few
+  minutes after deploy, and the first sign-in forces the temporary-password change.
 - **Gotcha:** keep résumé generation deterministic (no timestamps in document content) so CI reruns don't
-  produce spurious diffs; and keep the rendered site free of any contact detail the privacy rule forbids.
+  produce spurious diffs; keep the rendered site free of any contact detail the privacy rule forbids; and
+  never commit the owner email/password (secret-sourced).
