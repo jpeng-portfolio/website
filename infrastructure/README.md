@@ -1,8 +1,17 @@
 # Infrastructure (Pulumi, TypeScript)
 
-Serverless-first IaC for the jpeng-portfolio website. One **`prod`** stack,
-state in **Pulumi Cloud**, region pinned **us-east-1** (CloudFront ACM
-requirement). This program replaces the previous Terraform stack.
+Serverless-first IaC for the jpeng-portfolio website. State in **Pulumi Cloud**,
+region pinned **us-east-1** (CloudFront ACM requirement). This program replaces
+the previous Terraform stack.
+
+Two kinds of stack run against this one program:
+
+- **`prod`** — the production site at the apex `jpcloudengineering.com`, plus the
+  apex-shared contact API (SES). Deployed on merge by `deploy.yml`.
+- **`pr-<N>`** — a disposable **per-PR preview** at `pr-<N>.jpcloudengineering.com`
+  (its own S3 + CloudFront + ACM cert + DNS), deployed by `pr.yml` and destroyed
+  by `teardown.yml` when the PR closes. Previews are **static-site only**
+  (`deployContactApi=false`) so they never recreate the shared SES identity.
 
 ```
 infrastructure/
@@ -40,8 +49,9 @@ infrastructure/
 | --- | --- |
 | `siteBucketName` | site content bucket |
 | `distributionId` | CloudFront invalidation |
-| `distributionDomain` | apex DNS target |
-| `contactApiUrl` | injected as `NEXT_PUBLIC_CONTACT_API_URL` at build time |
+| `distributionDomain` | site DNS target |
+| `siteUrl` | the public `https://<host>` URL — surfaced in the GitHub Actions summary |
+| `contactApiUrl` | injected as `NEXT_PUBLIC_CONTACT_API_URL` at build time (empty on preview stacks) |
 
 ## Resource types verified via the Pulumi MCP server
 
@@ -68,6 +78,32 @@ pulumi config set jpeng-portfolio-infra:contactEmail <inbox>
 ```
 
 The program **fails loudly** if any required value is missing.
+
+### Per-stack config keys
+
+| Key | prod | preview (`pr-<N>`) | Meaning |
+| --- | --- | --- | --- |
+| `siteHost` | _(unset → apex)_ | `pr-<N>.<domain>` | host served; drives bucket/cert/DNS names |
+| `deployContactApi` | `true` | `false` | provision the apex-shared SES contact API |
+| `publishContent` | `true` (on publish) | `true` | also upload `out/` + invalidate CloudFront |
+
+`senderEmail` / `contactEmail` are required **only** when `deployContactApi=true`.
+
+## Preview environments
+
+`pr.yml` deploys a `pr-<N>` stack per PR and `teardown.yml` destroys it on close.
+Ephemeral stacks aren't committed, so each run re-derives `Pulumi.pr-<N>.yaml`
+config (state lives in Pulumi Cloud, config does not) — including
+`pulumi config set --secret cloudflareApiToken …` from a GitHub secret.
+
+> **Required GitHub secret:** `CLOUDFLARE_API_TOKEN` (DNS edit on the zone). Prod
+> reads the token from its committed encrypted config, but a fresh `pr-<N>` stack
+> has a different encryption key and can't reuse it, so the token is supplied per
+> run. Without this secret, preview deploy and teardown fail fast. `AWS_ROLE_ARN`
+> and `PULUMI_ACCESS_TOKEN` (already used by `deploy.yml`) are also required.
+
+First preview deploy of a PR issues an ACM cert + CloudFront distribution
+(a few minutes to validate + propagate); later pushes just resync content.
 
 ## Local usage
 

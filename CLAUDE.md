@@ -77,8 +77,16 @@ npm run lint     # eslint
 
 ## CI/CD & infrastructure
 
-CI/CD is moving to **GitHub Actions** with **PR gates** (lint → typecheck → unit → integration →
+CI/CD runs on **GitHub Actions** with **PR gates** (lint → typecheck → unit → integration →
 `pulumi preview`) and **deploy on merge** (`pulumi up` + publish the static site). IaC is **Pulumi
 (TypeScript)** in `infrastructure/`, state in **Pulumi Cloud**, AWS auth via **GitHub OIDC**. Use
 the connected **Pulumi MCP server** as the source of truth for any Pulumi resource/schema decision
 rather than writing resources from memory. Full plan: `MIGRATION_PROMPT.md`.
+
+**PR preview environments.** Each PR also deploys a disposable `pr-<N>` Pulumi stack to
+`pr-<N>.jpcloudengineering.com` (`pr.yml`), with the URL surfaced in the run summary; `teardown.yml`
+destroys it when the PR closes. Previews are **static-site only** — the apex-shared contact API is
+gated off via `deployContactApi=false` (and any future apex-shared/edge resources, e.g. M1's
+Lambda@Edge auth, must be gated the same way so previews stay light and tear down cleanly). The
+per-stack host is set with the `siteHost` config key. Preview stacks need a `CLOUDFLARE_API_TOKEN`
+GitHub secret (they can't reuse prod's encrypted config). See `infrastructure/README.md`.
