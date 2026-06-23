@@ -74,6 +74,54 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  resume:
+    # Regenerate the résumé (PDF + DOCX) from site content and upload it as a
+    # workflow artifact. The real contact block comes from the RESUME_CONTACT_JSON
+    # secret when available; otherwise a placeholder keeps the gate green (e.g.
+    # fork PRs that can't read secrets). Doc-generation failure fails CI (fail-loud)
+    # — but a missing secret never fails it, so production deploys aren't blocked on
+    # the secret being configured. The published artifact lives on the workflow run,
+    # downloadable by the owner; it is never served from the public site.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Resolve résumé contact (secret or placeholder)
+        env:
+          SECRET_CONTACT: ${{ secrets.RESUME_CONTACT_JSON }}
+        run: |
+          if [ -n "$SECRET_CONTACT" ]; then
+            {
+              echo "RESUME_CONTACT_JSON<<__RESUME_EOF__"
+              echo "$SECRET_CONTACT"
+              echo "__RESUME_EOF__"
+            } >> "$GITHUB_ENV"
+          else
+            echo 'RESUME_CONTACT_JSON={"fullName":"Example Candidate","email":"example@example.com","phone":"+1 (555) 555-0100","location":"Remote, US"}' >> "$GITHUB_ENV"
+          fi
+      - name: Generate résumé
+        run: npm run resume:build
+      - name: Assert both documents are valid and non-empty
+        run: |
+          pdf=dist/resume/jason-paquette-resume.pdf
+          docx=dist/resume/jason-paquette-resume.docx
+          test -s "$pdf" || { echo "::error::missing or empty $pdf"; exit 1; }
+          test -s "$docx" || { echo "::error::missing or empty $docx"; exit 1; }
+          # Magic-byte sanity: PDF starts with %PDF-, DOCX (zip) starts with PK.
+          head -c 5 "$pdf" | grep -q '%PDF-' || { echo "::error::$pdf is not a valid PDF"; exit 1; }
+          head -c 2 "$docx" | grep -q 'PK' || { echo "::error::$docx is not a valid DOCX"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: resume
+          path: dist/resume/
+          if-no-files-found: error
+
   lambda:
     # Integration: contact Lambda handler logic + contract, offline (mock SES).
     runs-on: ubuntu-latest

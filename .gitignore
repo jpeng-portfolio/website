@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
 
 # next.js
 /.next/
@@ -19,6 +21,9 @@
 
 # production
 /build
+
+# generated résumé documents (build artifact, never committed)
+/dist
 
 # misc
 .DS_Store
