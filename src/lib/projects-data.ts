@@ -12,6 +12,59 @@ export type ProjectItem = {
 
 export const projectsData: ProjectItem[] = [
   {
+    title: "keda-gpu-scaler",
+    period: "2026",
+    repositoryUrl: "https://github.com/pmady/keda-gpu-scaler",
+    summary:
+      "KEDA external scaler that autoscales Kubernetes GPU workloads from native NVML metrics. Open-source contributor (6 merged PRs) — 107 stars, 32 forks.",
+    tech: [
+      "Kubernetes",
+      "KEDA",
+      "NVIDIA GPU Operator",
+      "NVML",
+      "Helm",
+      "Terraform",
+      "Go",
+      "EKS",
+      "AKS",
+      "GKE",
+      "Grafana",
+    ],
+    bullets: [
+      "Provisioned GPU-enabled Kubernetes clusters across EKS, AKS, and GKE with Terraform — custom VPC networking, GPU node pools, and NVIDIA GPU Operator/KEDA deployment via Helm; resolved a GKE-specific NVIDIA container toolkit CNI failure.",
+      "Created a pre-built Grafana dashboard for GPU fleet visibility (utilization, VRAM, temperature, power draw).",
+      "Added table-driven Go unit tests for the multi-GPU metric aggregation logic (max/min/avg/sum).",
+      "Authored the project's architecture documentation and diagrams.",
+    ],
+  },
+  {
+    title: "gpu-mcp-server",
+    period: "2026",
+    repositoryUrl: "https://github.com/pmady/gpu-mcp-server",
+    summary:
+      "MCP server giving AI agents real-time access to NVIDIA GPU metrics via NVML. Open-source contributor (4 merged PRs) — 12 stars, 14 forks.",
+    tech: [
+      "MCP",
+      "NVML",
+      "NVIDIA GPU Operator",
+      "Kubernetes",
+      "Helm",
+      "Terraform",
+      "Docker",
+      "GitHub Actions",
+      "CodeQL",
+      "OpenSSF Scorecard",
+      "EKS",
+      "AKS",
+      "GKE",
+    ],
+    bullets: [
+      "Provisioned GPU-enabled Kubernetes clusters across EKS, AKS, and GKE with Terraform — custom VPC networking, GPU node pools, and NVIDIA GPU Operator/KEDA deployment via Helm; resolved a GKE-specific NVIDIA container toolkit CNI failure.",
+      "Hardened the supply chain with CodeQL security scanning and OpenSSF Scorecard CI workflows.",
+      "Automated Docker image publishing on release via GitHub Actions.",
+    ],
+  },
+  {
     title: "TransformMyNotes",
     period: "2026",
     image: "/projects/transformmynotes.png",
