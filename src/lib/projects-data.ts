@@ -113,7 +113,7 @@ export const projectsData: ProjectItem[] = [
       "Built a Terraform project that stands up an isolated DR environment in a secondary AWS region, auto-resolving the latest EBS snapshot and registering AMIs so each run restores current production data.",
       "Designed an air-gapped VPC — no default route, host-based routing, and a narrow allow-route for MFA agents — preventing restored apps from reaching live SaaS integrations.",
       "Delivered through HCP Terraform VCS workflows, with GitHub Actions running fmt, validate, and plan on PRs and gating applies on merge, authenticating via IAM OIDC instead of static keys.",
-      "Enables repeatable annual SOC 2 DR tabletop exercises with video evidence, and full teardown to eliminate standing costs.",
+      "Enables repeatable annual SOC 2 DR tabletop exercises with video evidence, and full teardown to remove standing costs.",
     ],
   },
   {

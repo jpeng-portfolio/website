@@ -66,12 +66,25 @@ export const skillCategories: SkillCategory[] = [
     ],
   },
   {
+    id: "operations",
+    title: "Operations & Reliability",
+    skills: [
+      { name: "Fleet Patching & Lifecycle Management", level: 95 },
+      { name: "After-Hours On-Call", level: 95 },
+      { name: "Incident Response", level: 90 },
+      { name: "Backup & Disaster Recovery", level: 90 },
+      { name: "Drift Remediation", level: 85 },
+      { name: "Runbooks & Documentation", level: 88 },
+    ],
+  },
+  {
     id: "monitoring-observability",
     title: "Monitoring & Observability",
     skills: [
       { name: "CloudWatch", level: 95 },
       { name: "DattoRMM", level: 90 },
       { name: "Grafana", level: 80 },
+      { name: "Grafana Alloy / OpenTelemetry", level: 78 },
       { name: "Nagios", level: 70 },
       { name: "SNMP Monitoring", level: 80 },
     ],

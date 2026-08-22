@@ -25,12 +25,11 @@ export function HeroSection() {
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-[#334155] sm:text-lg">
             8 years across software development and infrastructure, including 5
-            years designing, deploying, and operating multi-account AWS and
-            Microsoft 365 environments — provisioning infrastructure as code with
-            Terraform, building multi-environment CI/CD pipelines, and architecting
-            cost-optimized, highly available, SOC 2-compliant systems. I also build
-            full-stack serverless apps on AWS with Next.js when the project calls
-            for it.
+            years running production AWS and Microsoft 365 environments — owning a
+            SOC 2-compliant fleet of 30+ servers, provisioning it as code with
+            Terraform, building multi-environment CI/CD pipelines, and carrying
+            after-hours on-call throughout. I also build full-stack serverless apps
+            on AWS with Next.js when the project calls for it.
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <a

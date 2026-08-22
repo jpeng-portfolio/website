@@ -3,7 +3,7 @@ export const siteConfig = {
   domain: "jpcloudengineering.com",
   tagline: "AWS Cloud & Infrastructure Engineer",
   description:
-    "AWS cloud engineer with 8 years of industry experience, including 5 years designing, deploying, and operating multi-account AWS and Microsoft 365 environments with Terraform, multi-environment CI/CD, and secure, cost-optimized, SOC 2-compliant infrastructure.",
+    "Senior cloud engineer with 8 years of industry experience, including 5 years running production AWS and Microsoft 365 environments — a SOC 2-compliant fleet of 30+ servers provisioned as code with Terraform, multi-environment CI/CD, Zero Trust access, and after-hours on-call.",
   navItems: [
     { label: "About", href: "#about" },
     { label: "Skills", href: "#skills" },
