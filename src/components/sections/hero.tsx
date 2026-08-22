@@ -21,7 +21,7 @@ export function HeroSection() {
             {siteConfig.domain}
           </p>
           <h1 className="text-4xl font-bold leading-tight tracking-tight text-[#0F172A] sm:text-5xl">
-            AWS Cloud &amp; Infrastructure Engineer automating production cloud at scale.
+            Senior Cloud Engineer automating production cloud at scale.
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-[#334155] sm:text-lg">
             8 years across software development and infrastructure, including 5

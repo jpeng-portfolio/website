@@ -1,7 +1,7 @@
 export const siteConfig = {
   title: "JP Cloud Engineering",
   domain: "jpcloudengineering.com",
-  tagline: "AWS Cloud & Infrastructure Engineer",
+  tagline: "Senior Cloud Engineer",
   description:
     "Senior cloud engineer with 8 years of industry experience, including 5 years running production AWS and Microsoft 365 environments — a SOC 2-compliant fleet of 30+ servers provisioned as code with Terraform, multi-environment CI/CD, Zero Trust access, and after-hours on-call.",
   navItems: [

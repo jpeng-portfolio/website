@@ -27,7 +27,7 @@ export type ResumeData = {
 };
 
 export const resumeData: ResumeData = {
-  headline: "AWS Cloud & Infrastructure Engineer",
+  headline: "Senior Cloud Engineer",
   summaryParagraphs: [
     "I'm a senior cloud engineer with 8 years of industry experience spanning software development and cloud infrastructure, including 5 years running production AWS environments with weekend and after-hours on-call throughout. I own a SOC 2–compliant environment of 30+ Windows and Linux servers on a $200K–$250K annual cloud budget — patching, monitoring, access control, and incident response — provisioned as code with Terraform across multiple accounts under AWS Organizations.",
     "I'm hands-on across VPC and least-privilege IAM design, disaster recovery, observability, multi-environment CI/CD, and Zero Trust network access. I support multiple client engagements in parallel and translate complex technical issues for technical and non-technical audiences alike.",
