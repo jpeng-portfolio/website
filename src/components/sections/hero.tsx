@@ -24,11 +24,13 @@ export function HeroSection() {
             AWS Cloud &amp; Infrastructure Engineer automating production cloud at scale.
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-[#334155] sm:text-lg">
-            5 years designing, deploying, and managing multi-account AWS and
+            8 years across software development and infrastructure, including 5
+            years designing, deploying, and operating multi-account AWS and
             Microsoft 365 environments — provisioning infrastructure as code with
-            Terraform, building CI/CD pipelines, and architecting cost-optimized,
-            SOC 2-compliant systems. I also build full-stack serverless apps on AWS
-            with Next.js when the project calls for it.
+            Terraform, building multi-environment CI/CD pipelines, and architecting
+            cost-optimized, highly available, SOC 2-compliant systems. I also build
+            full-stack serverless apps on AWS with Next.js when the project calls
+            for it.
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <a

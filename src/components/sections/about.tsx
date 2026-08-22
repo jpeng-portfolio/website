@@ -17,7 +17,7 @@ export function AboutSection() {
         <SectionHeading
           eyebrow="About"
           title="AWS cloud and infrastructure engineering, end-to-end"
-          description="Designing, deploying, and operating production cloud — multi-account AWS and Microsoft 365 environments provisioned as code with Terraform, automated with CI/CD, and hardened for SOC 2 compliance."
+          description="Designing, deploying, and operating production cloud — multi-account AWS and Microsoft 365 environments provisioned as code with Terraform, automated with multi-environment CI/CD, and hardened for SOC 2 compliance and Zero Trust access."
         />
         <motion.div
           className="rounded-2xl border border-border bg-card p-6 shadow-sm after:block after:clear-both after:content-['']"

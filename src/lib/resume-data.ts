@@ -29,9 +29,9 @@ export type ResumeData = {
 export const resumeData: ResumeData = {
   headline: "AWS Cloud & Infrastructure Engineer",
   summaryParagraphs: [
-    "I'm an AWS cloud and infrastructure engineer with 5 years designing, deploying, and managing production environments. I provision multi-account AWS infrastructure as code with Terraform — VPCs, EC2, IAM, Lambda, and security groups — and have run a SOC 2-compliant environment of 30+ servers on a $200K–$250K annual cloud budget.",
-    "Day to day I build and maintain CI/CD pipelines (GitLab CI/CD and GitHub Actions), architect disaster-recovery and site-to-site VPN topologies, and monitor fleets with CloudWatch and DattoRMM — across both AWS and Microsoft 365 / Active Directory environments. I started on the frontline support desk and grew into owning cloud infrastructure end-to-end.",
-    "I also build full-stack serverless applications on AWS — Next.js and TypeScript frontends wired to Lambda-backed APIs with SST — when a project calls for it, so I can take a system from infrastructure all the way to a shipped product.",
+    "I'm an AWS cloud engineer with 8 years of industry experience spanning software development and cloud infrastructure, including 5 years designing, deploying, and operating production AWS environments. I specialize in infrastructure as code with Terraform, multi-environment CI/CD pipelines, and secure, cost-optimized, highly available architectures — including a SOC 2–compliant platform running 30+ servers on a $200K–$250K annual cloud budget.",
+    "I'm hands-on across VPC and least-privilege IAM design, multi-account provisioning under AWS Organizations, disaster recovery, observability, and Zero Trust network access (ZTNA). I support multiple client engagements in parallel and translate complex technical issues for technical and non-technical audiences alike.",
+    "I also build full-stack serverless applications on AWS — Next.js and TypeScript frontends wired to Lambda-backed APIs — and contribute to open-source GPU tooling for Kubernetes, so I can take a system from infrastructure all the way to a shipped product.",
   ],
   education: [
     {
@@ -41,6 +41,7 @@ export const resumeData: ResumeData = {
     },
   ],
   certifications: [
+    { name: "HashiCorp Certified: Terraform Associate (004)", date: "July 2026" },
     { name: "AWS Certified Solutions Architect – Associate", date: "March 2024" },
     { name: "eLearnSecurity Junior Penetration Tester (eJPT)", date: "July 2023" },
     { name: "CompTIA A+", date: "April 2021" },
