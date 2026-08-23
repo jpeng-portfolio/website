@@ -84,7 +84,8 @@ the connected **Pulumi MCP server** as the source of truth for any Pulumi resour
 rather than writing resources from memory. Full plan: `MIGRATION_PROMPT.md`.
 
 **PR preview environments.** Each PR also deploys a disposable `pr-<N>` Pulumi stack to
-`pr-<N>.jpcloudengineering.com` (`pr.yml`), with the URL surfaced in the run summary; `teardown.yml`
+`pr-<N>.jpcloudengineering.com` (`pr.yml`), with the URL surfaced in the run summary and as a
+sticky PR comment that is rewritten in place on every push; `teardown.yml`
 destroys it when the PR closes. Previews are **static-site only** — the apex-shared contact API is
 gated off via `deployContactApi=false` (and any future apex-shared/edge resources, e.g. M1's
 Lambda@Edge auth, must be gated the same way so previews stay light and tear down cleanly). The
