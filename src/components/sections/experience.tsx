@@ -18,7 +18,7 @@ export function ExperienceSection() {
         <SectionHeading
           eyebrow="Experience"
           title="Work Experience"
-          description="5 years progressing from frontline support into cloud and infrastructure engineering across AWS and Microsoft 365."
+          description="8 years across software development and infrastructure — from Java development and frontline support into senior cloud engineering on AWS and Microsoft 365, with after-hours on-call throughout."
         />
         <motion.div
           className="space-y-6"

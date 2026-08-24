@@ -12,6 +12,10 @@ Two kinds of stack run against this one program:
   (its own S3 + CloudFront + ACM cert + DNS), deployed by `pr.yml` and destroyed
   by `teardown.yml` when the PR closes. Previews are **static-site only**
   (`deployContactApi=false`) so they never recreate the shared SES identity.
+  After each successful deploy `pr.yml` posts the preview URL as a sticky PR
+  comment (found by the hidden `<!-- pr-preview-environment -->` marker and
+  updated in place), so the thread carries one always-current link rather than
+  one per push. That step needs `pull-requests: write`.
 
 ```
 infrastructure/

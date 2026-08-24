@@ -39,14 +39,14 @@ export function ProjectsSection() {
                   />
                 </a>
               ) : null}
-              <div className="flex flex-row justify-between px-4 sm:px-6 py-4 sm:py-5">
-                <div className="flex flex-col gap-1 flex-1 mr-2">
+              <div className="flex flex-col-reverse gap-2 px-4 sm:px-6 py-4 sm:py-5 sm:flex-row sm:justify-between sm:gap-0">
+                <div className="flex flex-col gap-1 flex-1 sm:mr-2">
                   <h2 className="text-lg tracking-tight leading-tight font-medium">
                     {project.title}
                   </h2>
                   <p className="text-foreground/50 text-sm">{project.summary}</p>
                 </div>
-                <div className="inline-flex h-fit items-center text-sm whitespace-nowrap shrink-0">
+                <div className="inline-flex h-fit items-center self-start text-sm whitespace-nowrap shrink-0">
                   <span className="rounded-full bg-secondary h-fit py-1 px-3 font-medium">
                     {project.period}
                   </span>

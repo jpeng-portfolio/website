@@ -21,14 +21,15 @@ export function HeroSection() {
             {siteConfig.domain}
           </p>
           <h1 className="text-4xl font-bold leading-tight tracking-tight text-[#0F172A] sm:text-5xl">
-            AWS Cloud &amp; Infrastructure Engineer automating production cloud at scale.
+            Senior Cloud Engineer automating production cloud at scale.
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-[#334155] sm:text-lg">
-            5 years designing, deploying, and managing multi-account AWS and
-            Microsoft 365 environments — provisioning infrastructure as code with
-            Terraform, building CI/CD pipelines, and architecting cost-optimized,
-            SOC 2-compliant systems. I also build full-stack serverless apps on AWS
-            with Next.js when the project calls for it.
+            8 years across software development and infrastructure, including 5
+            years running production AWS and Microsoft 365 environments — owning a
+            SOC 2-compliant fleet of 30+ servers, provisioning it as code with
+            Terraform, building multi-environment CI/CD pipelines, and carrying
+            after-hours on-call throughout. I also build full-stack serverless apps
+            on AWS with Next.js when the project calls for it.
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <a

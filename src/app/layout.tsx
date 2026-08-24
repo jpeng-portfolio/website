@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JP Cloud Engineering | Cloud & Infrastructure Engineer",
+  title: "JP Cloud Engineering | Senior Cloud Engineer",
   description:
     "Cloud and Infrastructure Engineering portfolio built with Next.js, shadcn, and AWS-focused projects.",
 };
